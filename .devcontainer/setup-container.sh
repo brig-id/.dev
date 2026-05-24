@@ -86,8 +86,15 @@ fi
 if ! command -v mold >/dev/null 2>&1; then
   echo ""
   echo "Installing mold linker..."
-  sudo apt-get install -y --no-install-recommends mold 2>/dev/null \
-    || echo "! mold: installation failed, falling back to lld"
+  MOLD_VERSION="2.35.1"
+  MOLD_ARCHIVE="mold-${MOLD_VERSION}-x86_64-linux.tar.gz"
+  curl -L --proto '=https' --tlsv1.2 -sSf \
+    "https://github.com/rui314/mold/releases/download/v${MOLD_VERSION}/${MOLD_ARCHIVE}" \
+    -o "/tmp/${MOLD_ARCHIVE}"
+  sudo tar -xzf "/tmp/${MOLD_ARCHIVE}" -C /usr/local --strip-components=1 \
+    --wildcards "*/bin/mold" "*/bin/ld.mold" "*/lib/mold/"
+  rm -f "/tmp/${MOLD_ARCHIVE}"
+  echo "✓ mold ready."
 fi
 
 echo ""
