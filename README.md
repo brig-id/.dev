@@ -37,7 +37,8 @@ code .dev/brig-id.code-workspace
 
 ### 3. (Optional) Reopen in the devcontainer
 
-The devcontainer gives a consistent toolchain with GitHub CLI and mounts the `.github` sibling repository next to `.dev/`.
+The devcontainer gives a consistent toolchain and mounts the `.github` sibling repository next to `.dev/`.
+GitHub tooling now comes primarily from the helpers4 devcontainer features, while `.dev` only keeps a few extra editor extensions on top.
 
 If you want `gh` to stay authenticated inside the container, export your host token before reopening:
 

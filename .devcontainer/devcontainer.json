@@ -1,6 +1,6 @@
 {
   "name": "brig·id workspace",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
   "workspaceFolder": "/workspaces/.dev",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/.dev,type=bind,consistency=cached",
   "mounts": [
@@ -14,16 +14,27 @@
     "GH_TOKEN": "${localEnv:GH_TOKEN}"
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false
+    },
+    "ghcr.io/helpers4/devcontainer/dotfiles-sync:1": {},
+    "ghcr.io/helpers4/devcontainer/shell-history-per-project:1": {},
+    "ghcr.io/helpers4/devcontainer/git-absorb:1": {},
+    "ghcr.io/helpers4/devcontainer/essential-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/github-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/typescript-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/vite-plus:1": {},
+    "ghcr.io/helpers4/devcontainer/peon-ping:1": {
+      "packs": "peasant_fr,peon_fr,warcraft-peon"
+    },
+    "ghcr.io/helpers4/devcontainer/package-auto-install:1": {}
   },
   "customizations": {
     "vscode": {
       "extensions": [
-        "github.vscode-github-actions",
-        "github.copilot",
-        "github.copilot-chat",
-        "ms-vscode-remote.remote-containers"
+        "ms-vscode-remote.remote-containers",
+        "streetsidesoftware.code-spell-checker",
+        "timonwong.shellcheck"
       ]
     }
   },
