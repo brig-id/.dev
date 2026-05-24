@@ -7,6 +7,30 @@
     {
       "name": "📦 .github",
       "path": "../.github"
+    },
+    {
+      "name": "🔐 crypto",
+      "path": "../crypto"
+    },
+    {
+      "name": "🧩 core",
+      "path": "../core"
+    },
+    {
+      "name": "🌿 server-leaf",
+      "path": "../server-leaf"
+    },
+    {
+      "name": "🌳 server-grove",
+      "path": "../server-grove"
+    },
+    {
+      "name": "🌲 server-forest",
+      "path": "../server-forest"
+    },
+    {
+      "name": "📐 spec",
+      "path": "../spec"
     }
   ],
   "settings": {

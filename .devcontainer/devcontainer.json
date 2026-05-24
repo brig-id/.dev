@@ -4,19 +4,40 @@
   "workspaceFolder": "/workspaces/.dev",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/.dev,type=bind,consistency=cached",
   "mounts": [
-    "source=${localWorkspaceFolder}/../.github,target=/workspaces/.github,type=bind,consistency=cached"
+    // ── sibling repos ────────────────────────────────────────────────────────
+    "source=${localWorkspaceFolder}/../.github,target=/workspaces/.github,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../crypto,target=/workspaces/crypto,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../core,target=/workspaces/core,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../server-leaf,target=/workspaces/server-leaf,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../server-grove,target=/workspaces/server-grove,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../server-forest,target=/workspaces/server-forest,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../spec,target=/workspaces/spec,type=bind,consistency=cached",
+    // ── cargo cache (named volumes — rien sur le host) ───────────────────────
+    "source=brigid-cargo-registry,target=/home/node/.cargo/registry,type=volume",
+    "source=brigid-cargo-git,target=/home/node/.cargo/git,type=volume",
+    // ── build artifacts partagés (target/ hors repos pour ne pas polluer) ────
+    "source=brigid-cargo-target,target=/cargo-target,type=volume"
   ],
   "containerEnv": {
     "BRIG_ID_ORG": "brig-id",
-    "BRIG_ID_REPOS": ".github"
+    "BRIG_ID_REPOS": ".github crypto core server-leaf server-grove server-forest spec",
+    // Redirige tous les target/ Rust vers le volume dédié (jamais sur le host)
+    "CARGO_TARGET_DIR": "/cargo-target"
   },
   "remoteEnv": {
     "GH_TOKEN": "${localEnv:GH_TOKEN}"
   },
   "features": {
+    // ── Rust (stable) ─────────────────────────────────────────────────────────
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "stable",
+      "profile": "default"
+    },
+    // ── Infrastructure ────────────────────────────────────────────────────────
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "moby": false
     },
+    // ── helpers4 features ─────────────────────────────────────────────────────
     "ghcr.io/helpers4/devcontainer/dotfiles-sync:1": {},
     "ghcr.io/helpers4/devcontainer/shell-history-per-project:1": {},
     "ghcr.io/helpers4/devcontainer/git-absorb:1": {},
@@ -34,13 +55,22 @@
       "extensions": [
         "ms-vscode-remote.remote-containers",
         "streetsidesoftware.code-spell-checker",
-        "timonwong.shellcheck"
+        "timonwong.shellcheck",
+        // ── Rust ────────────────────────────────────────────────────────────
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "vadimcn.vscode-lldb",
+        "serayuzgur.crates",
+        "fill-labs.dependi"
       ]
     }
   },
   "forwardPorts": [
-    3000,
-    5173
+    3000,  // Node / front dev
+    3001,  // Leptos SSR dev
+    5173,  // Vite HMR
+    8080,  // Axum API (Leaf)
+    5432   // PostgreSQL (Grove, futur)
   ],
   "remoteUser": "node",
   "postCreateCommand": "bash .devcontainer/setup-container.sh"

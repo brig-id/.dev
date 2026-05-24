@@ -1,5 +1,11 @@
 {
   "repos": [
-    ".github"
+    ".github",
+    "crypto",
+    "core",
+    "server-leaf",
+    "server-grove",
+    "server-forest",
+    "spec"
   ]
 }
