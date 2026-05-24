@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ── Fix volume ownership (volumes created as root by Docker) ────────────────────
+# CARGO_TARGET_DIR points to a named volume — must be writable by node.
+if [ -d "${CARGO_TARGET_DIR:-/cargo-target}" ]; then
+  sudo chown -R node:node "${CARGO_TARGET_DIR:-/cargo-target}"
+fi
+
 ORG="${BRIG_ID_ORG:-brig-id}"
 REPOS="${BRIG_ID_REPOS:-.github}"
 
@@ -29,28 +35,27 @@ echo "✓ Workspace repos ready."
 echo ""
 echo "Setting up Rust toolchain..."
 
-# Nightly (requis par cargo-fuzz) + composants pour cargo-llvm-cov
+# Nightly (required by cargo-fuzz) + components for cargo-llvm-cov
 rustup toolchain install nightly \
   --component rust-src,llvm-tools-preview \
-  --no-self-update \
-  --quiet
+  --no-self-update
 
-# Cible WASM pour Leptos
-rustup target add wasm32-unknown-unknown --quiet
+# WASM target for Leptos
+rustup target add wasm32-unknown-unknown
 
 echo "✓ Rust toolchain ready (stable + nightly, wasm32)."
 
 # ── cargo-binstall ─────────────────────────────────────────────────────────────
 if ! command -v cargo-binstall >/dev/null 2>&1; then
   echo ""
-  echo "Installing cargo-binstall (pré-compilés rapides)..."
+  echo "Installing cargo-binstall (fast pre-compiled binaries)..."
   curl -L --proto '=https' --tlsv1.2 -sSf \
     https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
     | bash
   echo "✓ cargo-binstall ready."
 fi
 
-# ── Outils Rust via binaires pré-compilés ─────────────────────────────────────
+# ── Rust tools via pre-compiled binaries ──────────────────────────────────────
 echo ""
 echo "Installing Rust tools (cargo-binstall)..."
 
@@ -69,7 +74,7 @@ cargo binstall --no-confirm --quiet \
 
 echo "✓ Rust tools installed."
 
-# ── cargo-fuzz (nightly uniquement, pas de binaire pré-compilé) ───────────────
+# ── cargo-fuzz (nightly only, no pre-compiled binary available) ────────────────
 if ! command -v cargo-fuzz >/dev/null 2>&1; then
   echo ""
   echo "Installing cargo-fuzz (nightly)..."
@@ -77,12 +82,12 @@ if ! command -v cargo-fuzz >/dev/null 2>&1; then
   echo "✓ cargo-fuzz ready."
 fi
 
-# ── mold linker (2-5× plus rapide que lld pour les builds incrémentaux) ───────
+# ── mold linker (2-5× faster than lld for incremental builds) ──────────────────
 if ! command -v mold >/dev/null 2>&1; then
   echo ""
   echo "Installing mold linker..."
   sudo apt-get install -y --no-install-recommends mold 2>/dev/null \
-    || echo "! mold: installation failed, lld sera utilisé en fallback"
+    || echo "! mold: installation failed, falling back to lld"
 fi
 
 echo ""
