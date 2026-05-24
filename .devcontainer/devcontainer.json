@@ -23,10 +23,10 @@
     "BRIG_ID_REPOS": ".github crypto core server-leaf server-grove server-forest spec",
     // Redirect all Rust target/ dirs to the dedicated volume (never on the host)
     "CARGO_TARGET_DIR": "/cargo-target",
-    "GH_TOKEN": "${localEnv:GH_TOKEN}"
+    "GH_TOKEN": "${localEnv:GH_TOKEN_FOR_BRIG_ID}"
   },
   "remoteEnv": {
-    "GH_TOKEN": "${localEnv:GH_TOKEN}"
+    "GH_TOKEN": "${localEnv:GH_TOKEN_FOR_BRIG_ID}"
   },
   "features": {
     // ── Rust (stable) ─────────────────────────────────────────────────────────
