@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "name": "🛠️ .dev",
+      "path": "."
+    },
+    {
+      "name": "📦 .github",
+      "path": "../.github"
+    }
+  ],
+  "settings": {
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+      {
+        "text": "Generate commit messages in English using Conventional Commits. Keep them concise, imperative, and lowercase after the colon."
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@brig-id/dev",
+  "version": "0.0.0",
+  "private": true,
+  "description": "brig-id orchestrator — shared workspace, devcontainer, AI guidance, and cross-repo scripts for the organization.",
+  "scripts": {
+    "install:all": "node scripts/run-each.mjs install",
+    "build:all": "node scripts/run-each.mjs build",
+    "test:all": "node scripts/run-each.mjs test",
+    "lint:all": "node scripts/run-each.mjs lint",
+    "status:all": "node scripts/git-each.mjs status -sb",
+    "fetch:all": "node scripts/git-each.mjs fetch --all --prune",
+    "pull:all": "node scripts/git-each.mjs pull --rebase --autostash",
+    "branch:all": "node scripts/git-each.mjs branch --show-current"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

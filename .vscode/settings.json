@@ -1,0 +1,10 @@
+{
+  "conventionalCommits.scopes": [
+    "workspace",
+    "devcontainer",
+    "ai",
+    "automation",
+    "docs",
+    "governance"
+  ]
+}
