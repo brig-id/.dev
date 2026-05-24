@@ -63,6 +63,7 @@ cargo binstall --no-confirm --quiet \
   cargo-edit \
   cargo-watch \
   cargo-cyclonedx \
+  cargo-leptos \
   just \
   wasm-pack
 

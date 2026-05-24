@@ -43,12 +43,12 @@
     "ghcr.io/helpers4/devcontainer/git-absorb:1": {},
     "ghcr.io/helpers4/devcontainer/essential-dev:1": {},
     "ghcr.io/helpers4/devcontainer/github-dev:1": {},
-    "ghcr.io/helpers4/devcontainer/typescript-dev:1": {},
-    "ghcr.io/helpers4/devcontainer/vite-plus:1": {},
+    // typescript-dev / vite-plus / package-auto-install : retirés
+    // Leptos SSR → cargo-leptos (Rust), pas de Vite ni de TypeScript
+    // .dev scripts → .mjs brut, aucune dépendance npm
     "ghcr.io/helpers4/devcontainer/peon-ping:1": {
       "packs": "peasant_fr,peon_fr,warcraft-peon"
-    },
-    "ghcr.io/helpers4/devcontainer/package-auto-install:1": {}
+    }
   },
   "customizations": {
     "vscode": {
@@ -66,11 +66,10 @@
     }
   },
   "forwardPorts": [
-    3000,  // Node / front dev
-    3001,  // Leptos SSR dev
-    5173,  // Vite HMR
-    8080,  // Axum API (Leaf)
-    5432   // PostgreSQL (Grove, futur)
+    3000, // dev divers
+    3001, // Leptos SSR dev
+    8080, // Axum API (Leaf)
+    5432  // PostgreSQL (Grove, futur)
   ],
   "remoteUser": "node",
   "postCreateCommand": "bash .devcontainer/setup-container.sh"
