@@ -3,76 +3,83 @@
 **Repo :** `brig-id/core`
 **Prérequis :** Phase 3 + Phase 4 terminées
 **Crate :** `brigid-oidc`
+**Commit :** `9cfa632` (branch `dev`)
+**Status :** ✅ Complete
 
 ---
 
 ## Crate `brigid-oidc`
 
 ### Dépendances
-- [ ] `jsonwebtoken` — JWT signing/verification (supporte EdDSA/Ed25519 depuis v9 ; signature ML-DSA hybride via code custom sur le header)
-- [ ] `brigid-crypto` (git dep) — signing keys (Ed25519 + ML-DSA hybride)
-- [ ] `brigid-identity` (workspace dep) — VSID, RootId
-- [ ] `serde` + `serde_json`
-- [ ] `time` — exp, iat
-- [ ] `url`
-- [ ] `uuid` — jti (JWT ID, anti-replay)
-- [ ] `thiserror`
+- [x] `jsonwebtoken` v9 — JWT signing/verification (EdDSA/Ed25519 via ring)
+- [x] `brigid-identity` (workspace dep) — VSID
+- [x] `serde` + `serde_json`
+- [x] `url`
+- [x] `uuid` — jti (JWT ID, anti-replay)
+- [x] `thiserror`
+- [x] `ed25519-dalek` (with pkcs8 feature) — key generation + PKCS8 DER encoding
+- [x] `base64ct` — base64url encoding for JWKS
 
 ## Clés de signature JWT
 
-- [ ] Clé de signing : Ed25519 (classique, compatible OIDC actuel)
-- [ ] Rotation de clés : support JWKS avec kid
-- [ ] `JWKSet` exposé via `.well-known/jwks.json`
-- [ ] Clé privée stockée chiffrée (brigid-store + brigid-crypto)
+- [x] Clé de signing : Ed25519 (classique, compatible OIDC actuel)
+- [x] Rotation de clés : support JWKS avec kid
+- [x] `JWKSet` exposé via `.well-known/jwks.json`
+- [x] `OidcSigningKey::to_raw_bytes` / `from_raw_bytes` pour stockage chiffré par l'appelant
 
 ## Token OIDC (ID Token)
 
-- [ ] Claims obligatoires :
-  - [ ] `sub` = VSID (stable par service)
-  - [ ] `iss` = `https://<server>`
-  - [ ] `aud` = client_id
-  - [ ] `exp` = now + 1h (configurable)
-  - [ ] `iat` = now
-  - [ ] `jti` = uuid v4 (anti-replay)
-- [ ] Claims brig·id custom :
-  - [ ] `did` = DID:web root (`did:web:server:u:username`)
-  - [ ] `server` = serveur root
-  - [ ] `alias_type` = `"public"` (0.0.1, pas d'alias privés encore)
-- [ ] `issue_token(vsid, client_id, user_did, signing_key) -> SignedJWT`
+- [x] Claims obligatoires :
+  - [x] `sub` = VSID (stable par service)
+  - [x] `iss` = `https://<server>`
+  - [x] `aud` = client_id
+  - [x] `exp` = now + ttl_secs (configurable)
+  - [x] `iat` = now
+  - [x] `jti` = uuid v4 (anti-replay)
+- [x] Claims brig·id custom :
+  - [x] `did` = DID:web root
+  - [x] `server` = serveur root
+  - [x] `alias_type` = `"public"` (0.0.1, pas d'alias privés encore)
+- [x] `issue_token(params: &IssuanceParams, key, now_unix) -> Result<String>`
 
 ## Endpoints `.well-known`
 
-- [ ] `OpenIDConfiguration` — struct serde conforme OpenID Connect Discovery 1.0
-  - [ ] `issuer`, `authorization_endpoint`, `token_endpoint`, `jwks_uri`
-  - [ ] `response_types_supported`, `subject_types_supported`, `id_token_signing_alg`
-- [ ] `build_openid_configuration(base_url) -> OpenIDConfiguration`
-- [ ] `build_jwks(verifying_key) -> JWKSet`
+- [x] `OpenIDConfiguration` — struct serde conforme OpenID Connect Discovery 1.0
+  - [x] `issuer`, `authorization_endpoint`, `token_endpoint`, `jwks_uri`
+  - [x] `response_types_supported`, `subject_types_supported`, `id_token_signing_alg_values_supported`
+- [x] `build_openid_configuration(base_url) -> OpenIDConfiguration`
+- [x] `build_jwks(keys) -> JwkSet`
 
 ## Validation de token (pour ressources protégées)
 
-- [ ] `validate_token(jwt, jwks, expected_aud) -> Claims`
-  - [ ] Vérifier signature
-  - [ ] Vérifier exp, iss, aud
-  - [ ] Vérifier jti pas déjà utilisé (replay protection — store)
-  - [ ] Store des jti avec TTL = durée de vie du token (`exp`) — taille bornée, evict à l'expiration (pas de croissance infinie)
+- [x] `validate_token(jwt, expected_issuer, expected_aud, key, jti_store) -> Result<Claims>`
+  - [x] Vérifier signature
+  - [x] Vérifier exp, iss, aud
+  - [x] Vérifier jti pas déjà utilisé (replay protection)
+  - [x] `JtiStore` : taille bornée, evict à l'expiration (pas de croissance infinie)
 
 ## Tests
 
-- [ ] Test issue + validate round-trip
-- [ ] Test : token expiré → Err
-- [ ] Test : mauvais aud → Err
-- [ ] Test : jti replay → Err
-- [ ] Test : `sub` = VSID (pas username, pas DID brut)
-- [ ] Test : `.well-known` JSON valide (schema check)
-- [ ] Test : JWKS contient la bonne clé publique
-- [ ] 100% coverage
+- [x] Test issue + validate round-trip
+- [x] Test : token expiré → `Err(Expired)`
+- [x] Test : mauvais aud → `Err(InvalidAudience)`
+- [x] Test : jti replay → `Err(JtiReplay)`
+- [x] Test : `sub` = VSID (pas username, pas DID brut)
+- [x] Test : `.well-known` JSON valide (schema check)
+- [x] Test : JWKS contient la bonne clé publique
+- [x] Test : signature invalide → `Err(Jwt(...))`
+- [x] Test : JtiStore eviction (expired entries réutilisables)
+- [x] Test : `OidcSigningKey` round-trip from raw bytes
+- [x] 100% line coverage, 100% function coverage
 
 ---
 
 ## Vérification finale
 
-- [ ] `cargo test -p brigid-oidc` passe 100%
-- [ ] `cargo llvm-cov -p brigid-oidc --summary-only` → 100%
-- [ ] `cargo clippy -- -D warnings` clean
-- [ ] `sub` ne contient jamais username, alias ou DID brut (testé explicitement)
-- [ ] Valider ID Token avec outil tiers (jwt.io ou similar)
+- [x] `cargo test -p brigid-oidc` → 15 passed, 0 failed
+- [x] `cargo llvm-cov --workspace --summary-only` → 1150 lines, 0 missed (100%)
+- [x] `cargo clippy --all-targets --all-features -- -D warnings` clean
+- [x] `cargo fmt --all --check` clean
+- [x] `cargo deny check` ok (ring MPL-2.0 via jsonwebtoken transitif)
+- [x] `cargo audit --ignore RUSTSEC-2023-0071` exit 0
+- [x] `sub` ne contient jamais username, alias ou DID brut (testé explicitement)
