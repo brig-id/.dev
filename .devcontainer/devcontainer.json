@@ -29,6 +29,8 @@
     "GH_TOKEN": "${localEnv:GH_TOKEN_FOR_BRIG_ID}"
   },
   "features": {
+    // ── Dev environment ───────────────────────────────────────────────────────
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
     // ── Rust (stable) ─────────────────────────────────────────────────────────
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "stable",
