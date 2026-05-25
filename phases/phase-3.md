@@ -9,6 +9,7 @@
 ## Crate `brigid-identity`
 
 ### Dépendances
+
 - [x] `brigid-crypto` (git dep)
 - [x] `sha3` — hachage pour VSID
 - [x] `thiserror` — erreurs typées
@@ -17,6 +18,7 @@
 ## Formats d'identifiants
 
 ### Root public identity
+
 - [x] Type `RootId { username: String, server: String }`
 - [x] `RootId::parse(input: &str) -> Result<RootId>` — valide `username@server`
   - [x] `username` : alphanumérique + `-_`, 3–64 chars, pas de `@` ni `_` seul
@@ -25,11 +27,13 @@
 - [x] `RootId::to_did_web()` → `did:web:server:u:username`
 
 ### Alias privés (structure, pas encore exposé en 0.0.1)
+
 - [x] Type `PrivateAlias(String)` — contient au moins un `_`, pas de `@`
 - [x] `PrivateAlias::is_valid(s: &str) -> bool`
 - [x] `PrivateAlias::to_did_peer()` — strip `_`, SHA3-256, encode en DID:peer:2.z (placeholder phase 4)
 
 ### Détection du type d'entrée utilisateur
+
 - [x] `parse_identifier(input) -> IdentifierKind`
   - [x] `@` présent → `RootPublic(RootId)`
   - [x] `_` présent sans `@` → `PrivateAlias(PrivateAlias)`
