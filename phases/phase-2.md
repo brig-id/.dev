@@ -11,6 +11,7 @@
 - [ ] `Cargo.toml` workspace à la racine de `core/`
 - [ ] Structure `crates/` : brigid-store, brigid-did
 - [ ] `.cargo/config.toml` : linker mold, `brigid-crypto` via git dep
+- [ ] `deny.toml` : configurer licences (MIT/Apache-2.0) + advisories (partagé par tout le workspace)
 - [ ] Caller workflows CI, security, coverage (appels reusable .github)
 
 ## Crate `brigid-store`

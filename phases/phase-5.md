@@ -9,7 +9,7 @@
 ## Crate `brigid-oidc`
 
 ### Dépendances
-- [ ] `jose-jwk` ou `jsonwebtoken` — JWT signing/verification
+- [ ] `jsonwebtoken` — JWT signing/verification (supporte EdDSA/Ed25519 depuis v9 ; signature ML-DSA hybride via code custom sur le header)
 - [ ] `brigid-crypto` (git dep) — signing keys (Ed25519 + ML-DSA hybride)
 - [ ] `brigid-identity` (workspace dep) — VSID, RootId
 - [ ] `serde` + `serde_json`
@@ -54,6 +54,7 @@
   - [ ] Vérifier signature
   - [ ] Vérifier exp, iss, aud
   - [ ] Vérifier jti pas déjà utilisé (replay protection — store)
+  - [ ] Store des jti avec TTL = durée de vie du token (`exp`) — taille bornée, evict à l'expiration (pas de croissance infinie)
 
 ## Tests
 

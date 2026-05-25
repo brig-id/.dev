@@ -35,7 +35,10 @@ echo "✓ Workspace repos ready."
 echo ""
 echo "Setting up Rust toolchain..."
 
-# Nightly (required by cargo-fuzz) + components for cargo-llvm-cov
+# llvm-tools-preview on stable — required by cargo-llvm-cov
+rustup component add llvm-tools-preview
+
+# Nightly (required by cargo-fuzz) + same components for consistency
 rustup toolchain install nightly \
   --component rust-src,llvm-tools-preview \
   --no-self-update

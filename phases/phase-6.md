@@ -45,6 +45,8 @@
 - [ ] CORS : origines strictement configurées (pas de wildcard `*`)
 - [ ] Validation de toutes les entrées (serde + validators)
 - [ ] Headers sécurité : `X-Content-Type-Options`, `X-Frame-Options`, `Strict-Transport-Security`
+- [ ] `Content-Security-Policy` : `default-src 'self'`, interdire `unsafe-inline`, nonce-based pour les scripts Leptos hydration — empêche le vol de tokens par XSS
+- [ ] TLS 1.3 minimum obligatoire (configurer rustls avec `ServerConfig::builder_with_protocol_versions(&[&TLS13])`)
 - [ ] TLS uniquement via rustls (pas d'OpenSSL en dépendance)
 - [ ] Logs structurés tracing — jamais de données sensibles loggées
 
@@ -63,7 +65,7 @@
 ## Crate `brigid-ui` (Leptos SSR)
 
 ### Dépendances
-- [ ] `leptos` (features: ssr, csr)
+- [ ] `leptos` (features: `ssr` côté serveur, `hydrate` côté client — `csr` n'existe pas dans Leptos)
 - [ ] `leptos_axum` — intégration Axum
 - [ ] `brigid-api` (workspace dep) — partage les routes
 - [ ] `serde` + `serde_json`

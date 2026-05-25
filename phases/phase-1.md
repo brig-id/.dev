@@ -11,6 +11,7 @@
 - [ ] `cargo init --lib` dans `crypto/`
 - [ ] Configurer `Cargo.toml` : édition 2024, version 0.0.1, licence MIT/Apache-2.0
 - [ ] `.cargo/config.toml` : linker mold, flags release (LTO thin, codegen-units 1)
+- [ ] `deny.toml` : configurer licences (MIT/Apache-2.0) + advisories (cargo deny check)
 - [ ] Ajouter caller workflow `.github/workflows/ci.yml` (appelle reusable ci-rust)
 - [ ] Ajouter caller workflow `.github/workflows/security.yml` (appelle reusable security-audit)
 - [ ] Ajouter caller workflow `.github/workflows/coverage.yml`
@@ -23,22 +24,26 @@
 - [ ] `ml-kem` — ML-KEM-768, FIPS 203 (RustCrypto, pure Rust)
 - [ ] `ml-dsa` — ML-DSA-65, FIPS 204 (RustCrypto, pure Rust)
 - [ ] `x25519-dalek` — X25519 pour le KEM hybride
-- [ ] `rand_core` + `getrandom` — RNG sécurisé
+- [ ] `rand_core` + `getrandom` — RNG sécurisé (feature `js` si wasm, serveur uniquement pour Phase 1)
 - [ ] `zeroize` — zéroisation mémoire des secrets
 - [ ] `secrecy` — wrapper Secret<T> pour les clés
+- [ ] `hex` — décodage `MASTER_KEY` depuis l'environnement
 
 ## Implémentation
 
 ### MASTER_KEY loading
-- [ ] Charger depuis variable d'environnement (`BRIGID_MASTER_KEY`)
-- [ ] Charger depuis fichier (path configurable)
+- [ ] Charger depuis variable d'environnement (`BRIGID_MASTER_KEY`, encodage hex 64 chars)
+- [ ] Charger depuis fichier (path configurable, même format hex)
+- [ ] Valider la longueur exacte (32 bytes après décodage hex) au chargement
 - [ ] Vérifier que jamais hardcodé, jamais loggé
 - [ ] Type `MasterKey(Secret<[u8; 32]>)` avec `Zeroize`
 
 ### AES-256-GCM
-- [ ] `encrypt(key, plaintext) -> (nonce, ciphertext)` — nonce aléatoire 96 bits
-- [ ] `decrypt(key, nonce, ciphertext) -> plaintext`
+- [ ] Struct `EncryptedBlob { nonce: [u8; 12], ciphertext: Vec<u8> }` (évite confusion d'ordre de paramètres)
+- [ ] `encrypt(key, plaintext) -> EncryptedBlob` — nonce aléatoire 96 bits
+- [ ] `decrypt(key, blob) -> Zeroizing<Vec<u8>>` — plaintext zéroïsé automatiquement en drop (secret en mémoire)
 - [ ] Nonce jamais réutilisé, clé toujours zéroïsée après usage
+- [ ] Profile release : `panic = "abort"` (empêche les unwinds de laisser des secrets sur la stack)
 
 ### HKDF-SHA3-256
 - [ ] `derive_key(master, info, length) -> Secret<[u8; N]>`
@@ -53,7 +58,7 @@
 - [ ] `hybrid_kem_keygen() -> (PublicKey, SecretKey)` — ML-KEM-768 + X25519 combined
 - [ ] `hybrid_encapsulate(pk) -> (Ciphertext, SharedSecret)`
 - [ ] `hybrid_decapsulate(sk, ct) -> SharedSecret`
-- [ ] Combiner les deux shared secrets via HKDF : `SS = HKDF(SS_mlkem || SS_x25519)`
+- [ ] Combiner les deux shared secrets via HKDF : `SS = HKDF(SS_mlkem || SS_x25519, info = b"brigid-hybrid-kem-v1")` (domain separation)
 
 ### ML-DSA-65 + Ed25519 (hybride PQC, FIPS 204)
 - [ ] `hybrid_keygen() -> (SigningKey, VerifyingKey)`
@@ -73,7 +78,7 @@
 - [ ] Test : decrypt(encrypt(x)) == x pour AES-GCM
 - [ ] Test : verify(sign(m)) == true, tampered msg == false
 - [ ] Test : hybrid KEM round-trip
-- [ ] Test : nonce collision improbable (statistical)
+- [ ] Test : deux appels successifs à `encrypt()` produisent des nonces distincts
 
 ## Sécurité
 - [ ] `cargo audit` — zéro advisory

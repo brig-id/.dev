@@ -39,7 +39,7 @@
 - [x] Require linear history
 - [x] No force push on `main`
 - [x] No branch deletion
-- [ ] Require status checks (CI) when workflows existent (à activer après 1er run CI)
+- [ ] Require status checks (CI) when workflows existent (à activer après 1er run CI) — en attente du 1er push CI
 
 ## Labels (dans chaque repo actif)
 
@@ -61,9 +61,9 @@
 
 ## GitHub Project
 
-- [ ] Créer project "brig·id 0.0.1" dans l'org brig-id ⚠️ manuel (token sans scope `project`)
-- [ ] Ajouter les repos actifs au project
-- [ ] Configurer les vues (Board, Table, Roadmap)
+- [x] Créer project "brig·id 0.0.1" dans l'org brig-id — https://github.com/orgs/brig-id/projects/1
+- [x] Ajouter les repos actifs au project (crypto, core, server-leaf, spec)
+- [ ] Configurer les vues (Board, Table, Roadmap) ⚠️ manuel
 
 ## CODEOWNERS
 
@@ -83,8 +83,8 @@
 
 ## Vérification
 
-- [ ] `gh repo list brig-id` affiche les 7 repos
-- [ ] Ouvrir le devcontainer — workspace ready sans erreur
-- [ ] `cargo --version` et `rustup show` fonctionnent dans le container
-- [ ] `cargo audit` et `cargo deny` disponibles
-- [ ] GitHub Project visible sur github.com/orgs/brig-id/projects
+- [x] `gh repo list brig-id` affiche les 7 repos
+- [x] Ouvrir le devcontainer — workspace ready sans erreur
+- [x] `cargo --version` et `rustup show` fonctionnent dans le container
+- [x] `cargo audit` et `cargo deny` disponibles
+- [x] GitHub Project visible sur github.com/orgs/brig-id/projects

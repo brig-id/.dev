@@ -1,413 +1,266 @@
-# brig·id — Plan d’architecture (v1)
+- # brig·id — Architecture Plan (v1)
 
-Objectif : document de référence pour implémentation (backend + frontend) avec GitHub Copilot.
+  Système d’identité décentralisé, sécurisé, full‑Rust.
 
-## 1. Vision
+  # 1. Vision
 
-brig·id = système d’identité :
+  brig·id repose sur trois couches d’identité :
 
-- **Décentralisé**
-- **Sans mot de passe** (passkeys / WebAuthn)
-- **Compatible OIDC + DID**
-- **Respectueux de la vie privée**
-- **Basé sur un identifiant root unique** + alias privés + identités virtuelles
+  1. Identifiant root public — unique globalement (`username@server`)
+  2. Alias privés — fixes ou temporaires, masqués, non corrélables
+  3. Identités virtuelles — cercles de vie (`§perso`, `§travail`, etc.)
 
-Trois couches d’identité :
+  Objectifs :
 
-1. **Identifiant root public** (un “corps humain” unique)
-2. **Alias privés** (masques, fixes ou temporaires)
-3. **Identités virtuelles** (cercles de vie : perso, travail, etc.)
+  - sécurité maximale
+  - décentralisation
+  - compatibilité OIDC + DID
+  - WebAuthn (passkeys)
+  - stockage chiffré (zero‑trust)
+  - UX simple et rapide
 
-## 2. Formats d’identifiants
+  # 2. Identifiants
 
-### 2.1 Identifiant root public (unique globalement)
+  ## 2.1 Identifiant root public
 
-Format UX :
+  Format : `username@server`
 
-- `username@server`
+  Exemples :
 
-Exemples :
+  - `berenger@brig.id`
+  - `alice@company.com`
 
-- `berenger@brig.id`
-- `alice@company.com`
+  Mapping DID :
 
-Mapping DID :
+  - `did:web:server:u:username`
 
-- `username@server` → `did:web:server:u:username`
+  Propriétés :
 
-Propriétés :
+  - unique globalement
+  - lisible
+  - base de dérivation pour la VSID
 
-- unique globalement
-- lisible
-- compatible décentralisation (multi ‑serveurs)
-- base de dérivation pour la VSID
+  ## 2.2 Alias privés
 
-### 2.2 Alias privés (fixes et temporaires)
+  Format : chaîne alphanumérique contenant au moins un `_`.
 
-Format UX :
+  Exemples :
 
-- chaîne alphanumérique contenant **au moins un `_`**
-- `_` est **obligatoire** et **ignoré** dans le mapping DID
+  - `x8Fj_29K`
+  - `tmpA_74Pq1`
 
-Exemples :
+  Règles :
 
-- alias privé fixe : `x8Fj_29K`
-- alias privé temporaire : `tmpA_74Pq1`
+  - `_` obligatoire
+  - `_` ignoré dans le mapping DID
+  - générés automatiquement
+  - alias fixe = stable
+  - alias temporaire = jetable
 
-Mapping DID :
+  Mapping DID :
 
-- `x8Fj_29K` → `did:peer:2.x8Fj29K`
-- `tmpA_74Pq1` → `did:peer:2.tmpA74Pq1`
+  - `x8Fj_29K` → `did:peer:2.x8Fj29K`
 
-Règles :
+  Propriétés :
 
-- générés automatiquement (jamais choisis par l’utilisateur)
-- alias fixe : stable, renouvelable (rotation manuelle)
-- alias temporaire : durée courte, non réutilisable
-- `_` peut apparaître plusieurs fois, mais jamais être le seul caractère
+  - non corrélables
+  - non résolvables
+  - parfaits pour sessions privées
 
-Propriétés :
+  ## 2.3 Identités virtuelles
 
-- ne révèlent pas le serveur
-- non résolvables publiquement
-- non corrélables
-- parfaits pour sessions privées / anonymes
+  Format : `§nom`
 
-### 2.3 Identités virtuelles (internes)
+  Exemples :
 
-Format UX :
+  - `§perso`
+  - `§travail`
+  - `§famille`
 
-- préfixe `§` + nom
+  Propriétés :
 
-Exemples :
+  - internes à brig·id
+  - influencent les claims OIDC
+  - choisies au login
 
-- `§perso`
-- `§travail`
-- `§famille`
-- `§anonyme`
+  # 3. Décentralisation
 
-Propriétés :
+  Chaque serveur gère son propre namespace :
 
-- **pas** des DIDs
-- **pas** des identifiants root
-- internes à brig·id
-- servent à filtrer / structurer les claims envoyés au service
-- choisies au moment du login
+  - `username@brig.id`
+  - `username@company.com`
+  - `username@selfhosted.net`
 
-## 3. Décentralisation
+  Discovery :
 
-Chaque serveur brig·id gère son propre namespace :
+  - `.well-known/did.json`
+  - `.well-known/openid-configuration`
 
-- `username@brig.id`
-- `username@company.com`
-- `username@selfhosted.net`
+  Mapping :
 
-Discovery :
+  - `did:web:server:u:username`
 
-- `https://server/.well-known/did.json`
-- `https://server/.well-known/openid-configuration`
-- éventuellement WebFinger pour compatibilité avec d’autres écosystèmes
+  # 4. VSID (Virtual Stable ID)
 
-Mapping :
+  Objectif : identifiant stable par utilisateur et par service, non corrélable.
 
-- `username@server` → `did:web:server:u:username`
+  Formule (conceptuelle) : `VSID = hash(DID_ROOT + CLIENT_ID + SALT)`
 
-## 4. VSID (Virtual Stable ID)
+  Propriétés :
 
-Objectif : identifiant stable **par utilisateur et par service**, non corrélable entre services.
+  - stable pour un même service
+  - différent entre services
+  - indépendant de l’alias utilisé
+  - indépendant de l’identité virtuelle
 
-Formule (conceptuelle) :
+  # 5. Stockage sécurisé (Zero‑Trust)
 
-- `VSID = hash(DID_ROOT + CLIENT_ID + SALT)`
+  Hypothèse : PostgreSQL, Redis, backups = compromis.
 
-Propriétés :
+  Règles :
 
-- stable pour un même couple (utilisateur, service)
-- différent entre services
-- indépendant :
-  - de l’alias utilisé (public / privé / temporaire)
-  - de l’identité virtuelle choisie
-- utilisé comme `sub` dans OIDC
+  - aucune donnée sensible en clair
+  - toutes les données sensibles chiffrées
+  - MASTER_KEY hors base
+  - dérivation HKDF par utilisateur
 
-## 5. Stockage sécurisé (Zero Trust)
+  Données chiffrées :
 
-Hypothèse : PostgreSQL, Redis, backups, snapshots peuvent être compromis.
+  - alias privés
+  - identités virtuelles
+  - tokens OAuth2
+  - clés internes
+  - secrets de fédération
 
-Principe :
+  Algorithmes :
 
-- aucune donnée sensible en clair
-- toutes les données sensibles chiffrées
-- clé maître (MASTER_KEY) **hors base** (env, fichier sécurisé, HSM, etc.)
-- clés dérivées par utilisateur / usage via HKDF
+  - AES‑256‑GCM
+  - HKDF‑SHA3
+  - Ed25519 (actuel)
+  - Kyber / Dilithium (PQC futur)
 
-Données chiffrées :
+  # 6. Alias privés : gestion interne
 
-- tokens OAuth2 / refresh tokens
-- alias privés (fixes + temporaires)
-- identités virtuelles (contenu + métadonnées sensibles)
-- clés internes (signatures, chiffrement)
-- secrets de fédération
+  ## 6.1 Alias fixe
 
-Algorithmes recommandés :
+  - généré automatiquement
+  - stocké chiffré
+  - renouvelable
+  - mappé vers `did:peer`
 
-- chiffrement : AES 6–256–GCM
-- dérivation : HKDF (SHA 3 idéalement)
-- signatures : Ed25519 (actuel), Dilithium/Falcon (PQC futur)
-- KEM : Kyber (PQC futur)
+  ## 6.2 Alias temporaires
 
-## 6. Gestion des alias privés
+  - générés automatiquement
+  - durée courte
+  - non réutilisables
 
-### 6.1 Alias privé fixe
+  ## 6.3 Pool d’IDs jetés
 
-- généré automatiquement à la création du compte
-- stocké chiffré
-- mappé vers `did:peer`
-- peut être régénéré via un bouton “Regénérer alias privé”
-  - ancien alias → déplacé dans une liste `revoked`
-  - jamais réutilisé
-  - VSID inchangée (dépend du root, pas de l’alias)
-
-### 6.2 Alias privés temporaires
-
-- générés automatiquement à chaque session privée/anonyme
-- durée de vie courte (configurable : session, 10 min, 1h…)
-- stockés chiffrés pendant leur validité
-- à expiration :
-  - déplacés dans `revoked`
+  - alias révoqués
   - jamais réutilisés
+  - stockés chiffrés
 
-### 6.3 Pool d’IDs jetés
+  # 7. Flux de login brig·id
 
-- table `revoked_aliases`
-- contient les alias privés (fixes ou temporaires) invalidés
-- jamais réacceptés
-- jamais régénérés
-- peut être purgé partiellement, mais **sans réutilisation** des valeurs
+  ## 7.1 Entrée utilisateur
 
-## 7. Flux de login brig·id
+  Accepte :
 
-### 7.1 Entrée utilisateur
+  - `username@server`
+  - `x8Fj_29K`
+  - `tmpA_74Pq1`
 
-L’utilisateur saisit :
+  Détection :
 
-- un identifiant root : `username@server`
-- ou un alias privé : `x8Fj_29K` / `tmpA_74Pq1`
+  - `@` → root public
+  - `_` sans `@` → alias privé
 
-Le backend :
+  ## 7.2 Résolution DID
 
-1. détecte le type :
-   - présence de `@` → root public
-   - présence de `_` sans `@` → alias privé
-2. résolt vers un DID :
-   - root → `did:web`
-   - alias → `did:peer`
+  - root → `did:web`
+  - alias → `did:peer`
 
-### 7.2 Authentification
+  ## 7.3 Authentification
 
-- challenge‑response via passkey / WebAuthn
-- éventuellement support PQC plus tard
-- aucune gestion de mot de passe
+  - WebAuthn (passkeys)
+  - challenge‑response
 
-### 7.3 Sélection d’identité virtuelle
+  ## 7.4 Sélection d’identité virtuelle
 
-Après authentification root :
+  - `§perso`, `§travail`, etc.
 
-- liste des identités virtuelles disponibles :
-  - `§perso`, `§travail`, `§famille`, etc.
-- l’utilisateur en choisit une (ou plusieurs, plus tard)
-- cette identité influence :
-  - les claims envoyés au service
-  - les autorisations
-  - les données exposées
+  ## 7.5 Génération VSID
 
-### 7.4 Génération de la VSID
+  - stable pour le service
 
-- basée sur le DID root + client OIDC
-- indépendante :
-  - de l’alias utilisé
-  - de l’identité virtuelle
+  ## 7.6 Token OIDC
 
-### 7.5 Construction du token OIDC
+  Claims :
 
-Claims typiques :
+  - `sub` = VSID
+  - `did` = DID root
+  - `identity` = identité virtuelle
+  - `server` = serveur root
+  - `alias_type` = public / privé / temporaire
 
-- `sub` : VSID
-- `did` : DID root
-- `identity` : identité virtuelle choisie (`perso`, `travail`, etc.)
-- `server` : serveur root ([`brig.id`](https://brig.id), [`company.com`](https://company.com), etc.)
-- éventuellement : `alias_type` (`public`, `private_fixed`, `private_temp`)
+  # 8. Backend (Rust)
 
-Token :
+  Stack :
 
-- signé (Ed25519, puis PQC plus tard)
-- compatible OIDC standard
+  - Axum (HTTP)
+  - Leptos (SSR + UI)
+  - PostgreSQL (données chiffrées)
+  - Redis (sessions)
+  - Tailwind (CSS)
+  - Tabler Icons (icônes)
 
-## 8. Backend — à implémenter
+  Modules :
 
-### 8.1 Modules principaux
+  - DID resolver (web + peer)
+  - Secure Vault (AES‑GCM + HKDF)
+  - Alias privés
+  - Identités virtuelles
+  - VSID
+  - WebAuthn
+  - OIDC server
+  - `.well-known` endpoints
 
-- **DID Resolver**
-  - `did:web` → via HTTPS
-  - `did:peer` → via stockage interne
-- **Générateur d’alias privés**
-  - génère des chaînes alphanumériques contenant `_`
-  - garantit unicité
-  - applique la règle “_ ignoré dans DID”
-- **Gestion des identités virtuelles**
-  - CRUD interne
-  - association à l’utilisateur root
-- **Générateur de VSID**
-  - fonction pure basée sur DID root + client_id + salt
-- **Secure Vault**
-  - chiffrement/déchiffrement des données sensibles
-  - gestion de MASTER_KEY + dérivations
-- **Serveur OIDC**
-  - endpoints standard (`/authorize`, `/token`, `/userinfo`, `.well-known/openid-configuration`)
-- **Gestion des passkeys**
-  - enregistrement
-  - authentification
-  - rotation
-- **Services et Proxies d’intégration**
-  - gestion des services tiers liés aux identités virtuelles
-  - proxy API vidéo : agrégation des services vidéo (YouTube, Dailymotion, etc.) par identité
-  - serveur central KDE Connect : dispatch des appareils par identité
-  - intégration OpenID Connect pour services SaaS avec accès contrôlé par identité
+  # 9. Frontend (Rust, Leptos)
 
-### 8.2 Stockage
+  Pages :
 
-- PostgreSQL :
-  - utilisateurs root
-  - identités virtuelles
-  - alias privés (chiffrés)
-  - métadonnées OIDC
-- Redis :
-  - sessions
-  - états temporaires (PKCE, nonce, etc.)
-- Table `revoked_aliases` :
-  - alias invalidés (chiffrés)
+  - login
+  - sélection d’identité virtuelle
+  - gestion alias privés
+  - gestion passkeys
 
-## 9. Frontend — à implémenter
+  Composants :
 
-### 9.1 Écrans
+  - boutons
+  - inputs
+  - modals
+  - alerts
+  - cards
+  - icônes Tabler
 
-- **Écran de login**
-  - champ identifiant (accepte `username@server` ou alias privé)
-  - détection automatique du type
-- **Écran de sélection d’identité virtuelle**
-  - liste des `§identités`
-  - possibilité d’en créer/éditer (plus tard)
-- **Écran de gestion des alias privés**
-  - afficher l’alias privé fixe (copiable)
-  - bouton “Regénérer”
-- **Écran de gestion des passkeys**
-  - ajouter / supprimer / renommer un appareil
-- **Écran de gestion des services et proxies**
-  - configuration des services tiers liés aux identités virtuelles
-  - gestion des proxys d’agrégation et d’intégration
+  Style :
 
-## 10. Interopérabilité
+  - Tailwind CSS
+  - thèmes personnalisés brig·id
 
-- OIDC standard
-- OIDC Federation (plus tard)
-- DID (web + peer)
-- WebAuthn / Passkeys
-- cryptographie post quantique (en option, mais anticipée)
+  # 10. Interopérabilité
 
-## 11. Contraintes à respecter (pour Copilot)
+  - OIDC standard
+  - OIDC Federation (futur)
+  - DID (web + peer)
+  - WebAuthn
+  - PQC (futur)
 
-- respecter strictement les formats :
-  - root : `username@server`
-  - alias privés : alphanumériques avec `_` obligatoire
-  - identités virtuelles : `§nom` (interne)
-- ne jamais stocker de données sensibles en clair
-- toujours chiffrer :
-  - tokens
-  - alias
-  - identités virtuelles
-- ne jamais dériver la VSID à partir d’un alias
-- toujours dériver la VSID à partir du DID root
-- ne jamais réutiliser un alias révoqué
-- ne jamais exposer les DIDs internes directement à l’utilisateur final (sauf debug / expert)
+  # 11. Contraintes pour GitHub Copilot
 
-## 12. Sécurité et conformité
-
-### 12.1 Gestion des clés
-
-- MASTER_KEY stockée hors base (HSM, fichier sécurisé, variable d’environnement)
-- rotation périodique recommandée
-- gestion des clés dérivées par utilisateur et usage
-
-### 12.2 Audits et logs
-
-- journalisation des accès et opérations sensibles
-- surveillance des anomalies
-- conformité RGPD et autres normes applicables
-
-### 12.3 Protection contre les attaques
-
-- protection contre les attaques par injection
-- protection contre les attaques par rejeu
-- protection contre les attaques par force brute
-- protection contre les attaques par phishing
-
-## 13. Roadmap et perspectives
-
-### 13.1 Version 1 (MVP)
-
-- implémentation des fonctions de base : login, gestion des alias, OIDC, passkeys
-- déploiement sur un serveur unique
-
-### 13.2 Versions futures
-
-- support multi-serveurs et federation OIDC
-- intégration cryptographie post-quantique
-- gestion avancée des identités virtuelles
-- interface utilisateur enrichie
-- audit et conformité renforcés
-
-## 14. Annexes
-
-### 14.1 Glossaire
-
-- DID : Decentralized Identifier
-- OIDC : OpenID Connect
-- VSID : Virtual Stable ID
-- HKDF : HMAC-based Extract-and-Expand Key Derivation Function
-- PQC : Post-Quantum Cryptography
-- HSM : Hardware Security Module
-
-### 14.2 Références
-
-- [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
-- [DID Core Specification](https://www.w3.org/TR/did-core/)
-- [WebAuthn Specification](https://www.w3.org/TR/webauthn/)
-- [NIST PQC Project](https://csrc.nist.gov/projects/post-quantum-cryptography)
-
-## 15. Services et Proxies dans le projet Levrier
-
-Le projet Levrier, dont brig·id fait partie, prévoit d’ajouter des services et des proxies qui combinent les identités virtuelles avec des services tiers pour offrir une expérience unifiée et sécurisée.
-
-### 15.1 Objectifs
-
-- Agréger et orchestrer plusieurs services autour d’une même identité virtuelle.
-- Maintenir la confidentialité, la décentralisation et le contrôle utilisateur.
-- Faciliter l’interopérabilité et l’intégration avec des services externes.
-
-### 15.2 Exemples de services/proxies
-
-- **Proxy API vidéo** : agrégation des services vidéo liés à l’identité (YouTube, Dailymotion, etc.) pour un accès simplifié et unifié.
-- **Serveur central KDE Connect** : dispatch des appareils par identité virtuelle pour une gestion multi-appareils sécurisée.
-- **Intégration OpenID Connect** : utilisation de l’OpenID de l’identité pour un service SaaS qui donne accès à tout ou partie d’une information d’un autre service lié à cette identité, avec contrôle d’accès fin.
-
-### 15.3 Architecture et intégration
-
-- Ces proxies/services agissent comme des intermédiaires intelligents respectant les principes brig·id.
-- Ils s’intègrent au backend via des modules dédiés à la gestion des proxys et à l’orchestration des identités virtuelles.
-- Ils exploitent la VSID pour assurer un accès stable et non corrélable entre services.
-- La sécurité est assurée par le chiffrement des données et l’authentification via passkeys/OpenID.
-
-### 15.4 Perspectives
-
-- Ouverture à des scénarios d’interopérabilité avancée.
-- Possibilité d’ajouter d’autres types de services et proxys selon les besoins.
-- Renforcement de l’expérience utilisateur par une gestion centralisée des identités virtuelles et des services associés.
+  - respecter les formats d’identifiants
+  - ne jamais stocker en clair
+  - toujours chiffrer alias + identités + tokens
+  - ne jamais dériver VSID depuis un alias
+  - ne jamais réutiliser un alias révoqué
+  - ne jamais exposer les DIDs internes à l’utilisateur final

@@ -19,7 +19,7 @@
 - [ ] `brigid-store` (core git dep) — initialisation DB SQLite
 - [ ] `brigid-crypto` (crypto git dep) — chargement MASTER_KEY
 - [ ] `clap` — parsing CLI / config
-- [ ] `figment` ou `config` — config TOML + env vars (merge)
+- [ ] `figment` — config TOML + env vars (merge) — plus moderne, mieux intégré avec l'écosystème Axum
 - [ ] `tokio` (full)
 - [ ] `tracing-subscriber` — logs JSON en prod
 
@@ -65,13 +65,14 @@
   - [ ] Build release : `cargo build --release -p leaf`
 - [ ] Stage final : `gcr.io/distroless/cc-debian12` (pas de shell, surface minimale)
   - [ ] Copier uniquement le binary
+  - [ ] `USER nonroot:nonroot` — ne jamais tourner en root
   - [ ] `EXPOSE 8080`
   - [ ] `ENTRYPOINT ["/leaf"]`
 - [ ] Image finale < 50 Mo idéalement
 - [ ] `.dockerignore` : exclure target/, .git, etc.
 
 ### Docker Compose (`deploy/compose.yaml`)
-- [ ] Service `leaf` : image brig-id/server-leaf, volume `/data`, env BRIGID_MASTER_KEY
+- [ ] Service `leaf` : image brig-id/server-leaf, volume `/data`, env BRIGID_MASTER_KEY, `read_only: true` + tmpfs sur `/tmp` (filesystem conteneur en lecture seule)
 - [ ] Service `caddy` : Caddy officiel, reverse proxy avec TLS automatique (Let's Encrypt)
   - [ ] `Caddyfile` : `example.com { reverse_proxy leaf:8080 }`
 - [ ] Volume nommé `leaf-data` pour SQLite DB
@@ -85,8 +86,8 @@
 - [ ] `GET /.well-known/openid-configuration` → JSON valide
 - [ ] `GET /.well-known/did.json` → JSON valide
 - [ ] `GET /.well-known/jwks.json` → JSON valide
-- [ ] Flux WebAuthn registration complet (headless, simulé)
-- [ ] Flux WebAuthn authentication + token OIDC (headless, simulé)
+- [ ] Flux WebAuthn registration complet (simulé via `webauthn-rs` en mode test avec softkey)
+- [ ] Flux WebAuthn authentication + token OIDC (simulé via `webauthn-rs` en mode test avec softkey)
 
 ## Tests du binary
 

@@ -76,6 +76,16 @@
 - [ ] Vérifier : TLS partout, pas de connexion plaintext
 - [ ] Vérifier : aucune dépendance OpenSSL dans l'arbre de dépendances
 
+## Procédure de rotation MASTER_KEY
+
+- [ ] Documenter la procédure dans `spec/operations.md` :
+  1. Générer une nouvelle `MASTER_KEY_NEW` (32 bytes hex)
+  2. Charger les deux clés simultanément (`BRIGID_MASTER_KEY` + `BRIGID_MASTER_KEY_OLD`)
+  3. Pour chaque entrée chiffrée en DB : déchiffrer avec OLD, rechiffrer avec NEW
+  4. Supprimer `BRIGID_MASTER_KEY_OLD` de l'env
+- [ ] Implémenter `leaf rotate-key --old <path> --new <path>` comme sous-commande CLI
+- [ ] Test : rotation round-trip → données accessibles après rotation, inaccessibles avec l'ancienne clé
+
 ## Préparation audit tiers
 
 - [ ] Contacter ≥ 2 sociétés d'audit (Trail of Bits, Quarkslab, Cure53, etc.)

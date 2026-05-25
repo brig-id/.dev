@@ -39,7 +39,8 @@
 ## VSID (Virtual Stable ID)
 
 - [ ] `compute_vsid(did_root: &DID, client_id: &str, salt: &[u8]) -> VSID`
-  - [ ] Formule : `SHA3-256(did_root || ":" || client_id || ":" || salt)`
+  - [ ] Formule : `SHA3-256(len_u32_be(did_root) || did_root || len_u32_be(client_id) || client_id || salt)`
+  - [ ] Longueurs préfixées en big-endian 4 bytes — évite les collisions (`:` est présent dans les DIDs)
   - [ ] Salt : dérivé depuis MASTER_KEY via HKDF avec info = `"brigid-vsid-salt"`
   - [ ] Résultat encodé en base64url (sans padding)
 - [ ] `VSID` est stable pour même (did, client_id, salt)
