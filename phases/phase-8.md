@@ -8,28 +8,28 @@
 
 ## Fuzzing CI continu (`brig-id/crypto`)
 
-- [ ] Configurer `cargo-fuzz` en CI nightly (GitHub Actions)
-  - [ ] Job `fuzz` déclenché sur push + schedule quotidien
-  - [ ] Timeout : 300s par target en CI
-  - [ ] Corpus stocké dans `.fuzz/corpus/` (versionné)
-- [ ] Targets fuzz complètes :
-  - [ ] `fuzz_decrypt` — AES-GCM
-  - [ ] `fuzz_hkdf_derive`
-  - [ ] `fuzz_hybrid_decapsulate` — ML-KEM+X25519
-  - [ ] `fuzz_hybrid_verify` — ML-DSA+Ed25519
-  - [ ] `fuzz_parse_identifier` — parsing identifiants
-  - [ ] `fuzz_did_web_resolve` — parsing DID:web
-  - [ ] `fuzz_jwt_validate` — validation JWT
-- [ ] Aucun crash non géré → `panic = "abort"` en release
+- [x] Configurer `cargo-fuzz` en CI nightly (GitHub Actions)
+  - [x] Job `fuzz` déclenché sur push + schedule quotidien
+  - [x] Timeout : 300s par target en CI
+  - [x] Corpus stocké dans cache GitHub Actions (par target + sha)
+- [x] Targets fuzz complètes :
+  - [x] `fuzz_decrypt` — AES-GCM
+  - [x] `fuzz_hkdf_derive`
+  - [x] `fuzz_hybrid_decapsulate` — ML-KEM+X25519
+  - [x] `fuzz_hybrid_verify` — ML-DSA+Ed25519
+  - [ ] `fuzz_parse_identifier` — parsing identifiants (dans `core/brigid-identity`)
+  - [ ] `fuzz_did_web_resolve` — parsing DID:web (dans `core/brigid-did`)
+  - [ ] `fuzz_jwt_validate` — validation JWT (dans `core/brigid-oidc`)
+- [x] Aucun crash non géré → `panic = "abort"` en release
 - [ ] Corpus de seeds : vecteurs FIPS 203/204 comme corpus initiaux
 
 ## SBOM (Software Bill of Materials)
 
-- [ ] `cargo-cyclonedx` configuré en CI pour chaque repo
-- [ ] Générer SBOM en format CycloneDX JSON
-- [ ] Uploader SBOM comme artefact CI à chaque release
+- [x] `cargo-cyclonedx` configuré en CI pour chaque repo (workflow réutilisable `sbom.yml`)
+- [x] Générer SBOM en format CycloneDX JSON
+- [x] Uploader SBOM comme artefact CI à chaque release
 - [ ] Vérifier : aucune dépendance avec advisory actif (`cargo audit`)
-- [ ] Vérifier : toutes licences compatibles MIT/Apache-2.0 (`cargo deny`)
+- [x] Vérifier : toutes licences compatibles MIT/Apache-2.0 (`cargo deny`)
 
 ## Rapport de couverture public
 
@@ -40,32 +40,34 @@
 
 ## `brig-id/spec` — Documentation technique publique
 
-- [ ] `spec/security-model.md` — modèle de menaces (threat model)
-  - [ ] Acteurs, vecteurs d'attaque, mitigations
-  - [ ] Hypothèses de sécurité (MASTER_KEY hors DB, TLS obligatoire, etc.)
-- [ ] `spec/protocol.md` — protocoles utilisés
-  - [ ] Flux WebAuthn détaillé
-  - [ ] Flux OIDC complet
-  - [ ] Calcul VSID (formule, propriétés)
-  - [ ] Cryptographie : algos, tailles de clés, durées de vie
-- [ ] `spec/pqc.md` — justification PQC
-  - [ ] Choix ML-KEM-768 + X25519 (niveau sécurité, FIPS)
-  - [ ] Choix ML-DSA-65 + Ed25519
-  - [ ] Plan migration pure PQC (post-standardisation)
-- [ ] `spec/audit-checklist.md` — checklist pour auditeurs tiers
-  - [ ] Points critiques à vérifier
-  - [ ] Vecteurs d'attaque à tester
-  - [ ] Contacts + processus CVD
+- [x] `spec/security-model.md` — modèle de menaces (threat model)
+  - [x] Acteurs, vecteurs d'attaque, mitigations
+  - [x] Hypothèses de sécurité (MASTER_KEY hors DB, TLS obligatoire, etc.)
+- [x] `spec/protocol.md` — protocoles utilisés
+  - [x] Flux WebAuthn détaillé
+  - [x] Flux OIDC complet
+  - [x] Flux logout (§8)
+  - [x] Calcul VSID (formule, propriétés)
+  - [x] Cryptographie : algos, tailles de clés, durées de vie
+- [x] `spec/pqc.md` — justification PQC
+  - [x] Choix ML-KEM-768 + X25519 (niveau sécurité, FIPS)
+  - [x] Choix ML-DSA-65 + Ed25519
+  - [x] Plan migration pure PQC (post-standardisation)
+- [x] `spec/audit-checklist.md` — checklist pour auditeurs tiers
+  - [x] Points critiques à vérifier (incl. logout/blacklist, déploiement leaf)
+  - [x] Vecteurs d'attaque à tester
+  - [x] Contacts + processus CVD
+- [x] `spec/operations.md` — procédures opérationnelles
 
 ## Processus CVD (Coordinated Vulnerability Disclosure)
 
-- [ ] `SECURITY.md` complet dans chaque repo actif
-  - [ ] GitHub Security Advisories activé
-  - [ ] Email de contact sécurisé (ou clé GPG publique)
-  - [ ] SLA de réponse (ex: 48h ack, 90j remediation)
-- [ ] GitHub secret scanning activé sur tous les repos
-- [ ] Dependabot activé sur tous les repos (mises à jour auto)
-- [ ] `cargo deny` bloque les advisories en CI
+- [x] `SECURITY.md` complet dans chaque repo actif
+  - [x] GitHub Security Advisories activé (via GitHub Settings)
+  - [x] Email de contact sécurisé (ou clé GPG publique)
+  - [ ] SLA de réponse (ex: 48h ack, 90j remediation) — à formaliser dans SECURITY.md
+- [ ] GitHub secret scanning activé sur tous les repos (Settings → Security)
+- [x] Dependabot activé sur tous les repos (`.github/dependabot.yml` ajouté)
+- [x] `cargo deny` bloque les advisories en CI
 
 ## Revue code sécurité interne
 
