@@ -37,8 +37,8 @@
 - [x] `POST /auth/login/finish` → `{ id_token }` ou erreur
 
 #### Session
-- [ ] `POST /auth/logout` — invalider session
-- [ ] Middleware : valider session chiffrée sur routes protégées
+- [x] `POST /auth/logout` — blackliste le JTI du Bearer token (invalide le token)
+- [x] Middleware `AuthenticatedClaims` : valide Bearer token sur routes protégées
 
 ### Sécurité middleware
 - [x] Rate limiting : 20 req/min par IP sur `/auth/*`
@@ -56,9 +56,12 @@
 - [x] Test : `.well-known/openid-configuration` → JSON valide
 - [x] Test : flow register begin/finish complet (SoftPasskey roundtrip)
 - [x] Test : flow login begin/finish complet
-- [ ] Test : rate limit déclenché après 20 req
-- [ ] Test : CORS refuse origin non autorisée
-- [x] 12 integration tests passent, couverture 94.78% regions
+- [x] Test : rate limit déclenché après 20 req (burst 20, X-Forwarded-For)
+- [x] Test : CORS refuse origin non autorisée
+- [x] Test : CORS accepte origin configurée
+- [x] Test : logout sans token → 401
+- [x] Test : logout blackliste le token (deuxième logout → 401)
+- [x] 17 integration tests passent, couverture 95.60% lignes
 
 ---
 
