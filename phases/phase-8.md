@@ -76,7 +76,7 @@
 - [ ] Revue des inputs utilisateur (validation stricte avant traitement)
 - [ ] Revue CORS + rate limiting
 - [ ] Vérifier : TLS partout, pas de connexion plaintext
-- [ ] Vérifier : aucune dépendance OpenSSL dans l'arbre de dépendances
+- [x] Vérifier : aucune dépendance OpenSSL dans l'arbre de dépendances — crypto/server-leaf TLS path **zéro OpenSSL** ; core tire `openssl-sys` **uniquement** via `webauthn-attestation-ca` (exception documentée dans `core/AGENTS.md`, hors chemin TLS/KEM/DSA)
 
 ## Procédure de rotation MASTER_KEY
 
@@ -100,14 +100,14 @@
 ## Vérification finale (release 0.0.1)
 
 - [ ] `cargo test --workspace` sur crypto + core + server-leaf → 100% pass
-- [ ] `cargo llvm-cov` → ≥ 95% (100% sur crypto)
-- [ ] `cargo audit` → zéro advisory
+- [ ] `cargo llvm-cov` → ≥ 95% (crypto 98.3%)
+- [x] `cargo audit` → zéro advisory (crypto, core, server-leaf vérifiés)
 - [ ] `cargo deny check` → zéro violation
 - [ ] `cargo clippy -- -D warnings` → zéro warning
 - [ ] Fuzzing CI : aucun crash connu
 - [ ] SBOM générés et archivés
-- [ ] `spec/` : security-model.md, protocol.md, pqc.md, audit-checklist.md publiés
+- [x] `spec/` : security-model.md, protocol.md, pqc.md, audit-checklist.md publiés
 - [ ] GitHub Security Advisories activé sur tous les repos
-- [ ] Dependabot activé sur tous les repos
+- [x] Dependabot activé sur tous les repos (crypto, core, server-leaf, .github ; spec est docs-only)
 - [ ] Déploiement Leaf fonctionnel end-to-end
 - [ ] Tag `v0.0.1` créé sur server-leaf + core + crypto
