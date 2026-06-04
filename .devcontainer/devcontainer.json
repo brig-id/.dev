@@ -1,5 +1,5 @@
 {
-  "name": "brig·id workspace",
+  "name": "brig·id",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:24",
   "workspaceFolder": "/workspaces/.dev",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/.dev,type=bind,consistency=cached",
@@ -29,18 +29,18 @@
     "GH_TOKEN": "${localEnv:GH_TOKEN_FOR_BRIG_ID}"
   },
   "features": {
-    // ── Dev environment ───────────────────────────────────────────────────────
+    // ── Dev environment ──────────────────────────────────────────────────────
     "ghcr.io/devcontainers/features/git-lfs:1": {},
-    // ── Rust (stable) ─────────────────────────────────────────────────────────
+    // ── Rust (stable) ────────────────────────────────────────────────────────
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "stable",
       "profile": "default"
     },
-    // ── Infrastructure ────────────────────────────────────────────────────────
+    // ── Infrastructure ───────────────────────────────────────────────────────
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "moby": false
     },
-    // ── helpers4 features ─────────────────────────────────────────────────────
+    // ── helpers4 features ────────────────────────────────────────────────────
     "ghcr.io/helpers4/devcontainer/dotfiles-sync:1": {},
     "ghcr.io/helpers4/devcontainer/shell-history-per-project:1": {},
     "ghcr.io/helpers4/devcontainer/git-absorb:1": {},
@@ -48,6 +48,11 @@
     "ghcr.io/helpers4/devcontainer/github-dev:1": {},
     "ghcr.io/helpers4/devcontainer/peon-ping:1": {
       "packs": "peasant_fr,peon_fr,warcraft-peon"
+    },
+    "ghcr.io/helpers4/devcontainer/claude-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/auto-header:1": {
+      "projectName": "brig⋅id",
+      "license": "LGPL-3.0-or-later"
     }
   },
   "customizations": {

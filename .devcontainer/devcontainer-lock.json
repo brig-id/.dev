@@ -15,6 +15,16 @@
       "resolved": "ghcr.io/devcontainers/features/rust@sha256:0c55e65f2e3df736e478f26ee4d5ed41bae6b54dac1318c443e31444c8ed283c",
       "integrity": "sha256:0c55e65f2e3df736e478f26ee4d5ed41bae6b54dac1318c443e31444c8ed283c"
     },
+    "ghcr.io/helpers4/devcontainer/auto-header:1": {
+      "version": "1.0.8",
+      "resolved": "ghcr.io/helpers4/devcontainer/auto-header@sha256:0c68dc8549082a716cc8de7e52033511d3e0eb24c639dad010459327c65e2743",
+      "integrity": "sha256:0c68dc8549082a716cc8de7e52033511d3e0eb24c639dad010459327c65e2743"
+    },
+    "ghcr.io/helpers4/devcontainer/claude-dev:1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/helpers4/devcontainer/claude-dev@sha256:8625221ea66e93614e972198f734ff08520105c0caa95e0079856b74c2fab69b",
+      "integrity": "sha256:8625221ea66e93614e972198f734ff08520105c0caa95e0079856b74c2fab69b"
+    },
     "ghcr.io/helpers4/devcontainer/dotfiles-sync:1": {
       "version": "1.0.4",
       "resolved": "ghcr.io/helpers4/devcontainer/dotfiles-sync@sha256:0c83130721dd7667f76a5c9ad7ab0d7cc3db37cc50320d6c2dc911fc17df48b5",
