@@ -46,10 +46,14 @@
     "ghcr.io/helpers4/devcontainer/git-absorb:1": {},
     "ghcr.io/helpers4/devcontainer/essential-dev:1": {},
     "ghcr.io/helpers4/devcontainer/github-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/typescript-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/vite-plus:1": {},
     "ghcr.io/helpers4/devcontainer/peon-ping:1": {
       "packs": "peasant_fr,peon_fr,warcraft-peon"
     },
+    "ghcr.io/helpers4/devcontainer/pnpm-store:1": {},
     "ghcr.io/helpers4/devcontainer/claude-dev:1": {},
+    "ghcr.io/helpers4/devcontainer/package-auto-install:1": {},
     "ghcr.io/helpers4/devcontainer/auto-header:1": {
       "projectName": "brig⋅id",
       "license": "LGPL-3.0-or-later"
