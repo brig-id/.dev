@@ -1,76 +1,117 @@
-# Phase 3 — `brig-id/core` : Identity & VSID
+# Phase 3 — Intégration & Validation E2E (`server-leaf`)
 
-**Repo :** `brig-id/core`
-**Prérequis :** Phase 2 terminée
-**Crate :** `brigid-identity`
+**Repos :** `brig-id/core`, `brig-id/server-leaf`, `brig-id/web`
+**Prérequis :** Phase 2 terminée (UI Qwik fonctionnelle)
+**Objectif :** Déploiement unifié — Rust API + UI statique Qwik — validé de bout en bout.
 
 ---
 
-## Crate `brigid-identity`
+## Contexte
 
-### Dépendances
+Le binary `leaf` sert à la fois l'API `brigid-api` et les fichiers statiques Qwik.
+L'UI Qwik build vers `dist/` — copié dans l'image Docker ou monté en volume.
+Aucun Node.js en production.
 
-- [x] `brigid-crypto` (git dep)
-- [x] `sha3` — hachage pour VSID
-- [x] `thiserror` — erreurs typées
-- [x] `base64ct` — encodage base64url (VSID et DID:peer)
+---
 
-## Formats d'identifiants
+## Intégration server-leaf
 
-### Root public identity
+- [ ] Ajouter `tower-http::services::ServeDir` pour servir `ui/dist/` sur `/`
+- [ ] Route fallback : toute URL non-API → `index.html` (SPA fallback)
+- [ ] CSP header mis à jour : `script-src 'self'` (les assets Qwik sont sur la même origine)
+- [ ] Config `leaf.toml` : champ `ui_dist_dir` (chemin vers le dossier de build UI)
+- [ ] Test : `GET /login` → HTML 200 avec `Content-Type: text/html`
+- [ ] Test : `GET /assets/q-*.js` → 200, `Content-Type: application/javascript`
 
-- [x] Type `RootId { username: String, server: String }`
-- [x] `RootId::parse(input: &str) -> Result<RootId>` — valide `username@server`
-  - [x] `username` : alphanumérique + `-_`, 3–64 chars, pas de `@` ni `_` seul
-  - [x] `server` : domaine valide (RFC 1123)
-- [x] `RootId::to_string()` → `username@server`
-- [x] `RootId::to_did_web()` → `did:web:server:u:username`
+---
 
-### Alias privés (structure, pas encore exposé en 0.0.1)
+## Route manquante : `GET /auth/passkeys`
 
-- [x] Type `PrivateAlias(String)` — contient au moins un `_`, pas de `@`
-- [x] `PrivateAlias::is_valid(s: &str) -> bool`
-- [x] `PrivateAlias::to_did_peer()` — strip `_`, SHA3-256, encode en DID:peer:2.z (placeholder phase 4)
+> Identifié pendant la phase 2 — l'UI `/passkeys` a besoin de lister les passkeys.
 
-### Détection du type d'entrée utilisateur
+- [ ] Handler `list_passkeys` :
+  - [ ] Extrait `AuthenticatedClaims`
+  - [ ] Reçoit `user_id` (header ou query param — même pattern que DELETE)
+  - [ ] Vérifie VSID → sinon 403
+  - [ ] `store.fetch_credentials(user_id)` → retourne liste `[{id, created_at}]`
+- [ ] Route `GET /auth/passkeys` ajoutée dans le router
+- [ ] Test : liste retourne les passkeys enregistrées
+- [ ] Test : user_id d'un autre user → 403
 
-- [x] `parse_identifier(input) -> IdentifierKind`
-  - [x] `@` présent → `RootPublic(RootId)`
-  - [x] `_` présent sans `@` → `PrivateAlias(PrivateAlias)`
-  - [x] sinon → `Err(InvalidIdentifier)`
+---
 
-## VSID (Virtual Stable ID)
+## Validation binary `leaf`
 
-- [x] `compute_vsid(did_root: &str, client_id: &str, salt: &[u8]) -> Vsid`
-  - [x] Formule : `SHA3-256(len_u32_be(did_root) || did_root || len_u32_be(client_id) || client_id || salt)`
-  - [x] Longueurs préfixées en big-endian 4 bytes — évite les collisions (`:` est présent dans les DIDs)
-  - [x] Salt : dérivé depuis MASTER_KEY via HKDF avec info = `"brigid-vsid-salt"`
-  - [x] Résultat encodé en base64url (sans padding)
-- [x] `VSID` est stable pour même (did, client_id, salt)
-- [x] `VSID` différent si client_id change (non corrélable entre services)
-- [x] `VSID` ne dérive jamais depuis un alias (contrainte stricte)
-- [x] `VSID` ne dérive jamais depuis une identité virtuelle (contrainte stricte)
+- [ ] Test : démarrage sans `BRIGID_MASTER_KEY` → exit non-zéro + message lisible
+- [ ] Test : `--config` vers fichier inexistant → exit non-zéro
+- [ ] Test : config valide + MASTER_KEY → serveur écoute sur le port configuré
+- [ ] Test : graceful shutdown (`SIGTERM`) → DB non corrompue, exit 0
+- [ ] Test : port déjà occupé → exit non-zéro + message clair
 
-## Tests
+---
 
-- [x] `RootId::parse("berenger@brig.id")` → Ok
-- [x] `RootId::parse("berenger")` → Err (pas de @)
-- [x] `RootId::parse("@brig.id")` → Err (username vide)
-- [x] `PrivateAlias::is_valid("x8Fj_29K")` → true
-- [x] `PrivateAlias::is_valid("noUnderscore")` → false
-- [x] `parse_identifier` : tous les cas
-- [x] VSID stable : même entrées → même VSID
-- [x] VSID non corrélé : client_id différent → VSID différent
-- [x] VSID ≠ f(alias) : test que l'algo n'utilise jamais l'alias
-- [x] 100% coverage (667 lignes workspace, 30 nouveaux tests)
+## Docker
+
+- [ ] `docker build -t brigid/leaf:dev .` → succès
+- [ ] Image finale < 60 Mo (Rust binary + assets UI statiques)
+- [ ] `docker run --rm -e BRIGID_MASTER_KEY=... brigid/leaf:dev --help` → aide affichée
+- [ ] Vérifier : process tourne en `nonroot:nonroot`
+- [ ] Vérifier : aucun binaire inutile (`sh`, `curl`, etc. absents dans l'image distroless)
+- [ ] Multi-stage build : stage `ui-build` (Node.js) → stage `rust-build` → stage final (distroless)
+
+---
+
+## Docker Compose dev
+
+- [ ] `docker compose -f deploy/compose.dev.yaml up` → serveur démarre sans TLS
+- [ ] `curl http://localhost:8080/health` → `{"status":"ok"}`
+- [ ] `curl http://localhost:8080/login` → HTML (page Qwik)
+- [ ] `curl http://localhost:8080/.well-known/openid-configuration` → JSON valide
+- [ ] `docker compose -f deploy/compose.dev.yaml down` → propre, aucune donnée résiduelle
+
+---
+
+## Tests E2E smoke (Rust + `reqwest`)
+
+Fichier : `server-leaf/tests/smoke/`
+
+- [ ] `GET /health` → 200
+- [ ] `GET /.well-known/openid-configuration` → JSON, champ `issuer` présent
+- [ ] `GET /.well-known/did.json` → JSON, champ `id` présent
+- [ ] `GET /.well-known/jwks.json` → JSON, champ `keys` non vide
+- [ ] `GET /login` → HTML 200
+- [ ] Flux WebAuthn registration via SoftPasskey :
+  - [ ] `POST /auth/register/begin` → challenge
+  - [ ] `POST /auth/register/finish` → 200
+- [ ] Flux WebAuthn login + token OIDC :
+  - [ ] `POST /auth/login/begin` → challenge
+  - [ ] `POST /auth/login/finish` → `{"id_token": "...", "user_id": "..."}`
+  - [ ] Décoder JWT → `sub` = VSID, `aud` = client_id
+- [ ] `DELETE /auth/passkeys/{id}` → 200 (après login)
+- [ ] Rate limit : 21ème requête sur `/auth/*` → 429
+
+---
+
+## Tests E2E navigateur (Playwright, repo `brig-id/web`)
+
+- [ ] Flux register complet dans Chrome avec passkey logicielle
+- [ ] Flux login → redirect `/passkeys`, token dans localStorage
+- [ ] Liste passkeys affichée
+- [ ] Supprimer passkey → liste mise à jour
+- [ ] Déconnexion → redirect `/login`, localStorage vidé
+- [ ] Tests répétés dans Firefox
 
 ---
 
 ## Vérification finale
 
-- [x] `cargo test -p brigid-identity` passe 100% (30 tests)
-- [x] `cargo llvm-cov --workspace --summary-only` → 100% lignes (667 lignes, 0 manquée)
-- [x] `cargo clippy -- -D warnings` clean
-- [x] `cargo fmt --all --check` clean
-- [x] `cargo deny check` clean
-- [x] Propriétés critiques documentées dans les tests (pas de dérivation depuis alias)
+- [ ] `cargo test --workspace` → 100% pass (core + server-leaf)
+- [ ] `pnpm build && pnpm test` → pass (web)
+- [ ] `cargo build --release -p leaf` → succès
+- [ ] `docker build -t brigid/leaf:dev .` → succès, image < 60 Mo
+- [ ] `docker compose -f deploy/compose.dev.yaml up` → serveur démarre et répond
+- [ ] Smoke tests Rust → tous pass
+- [ ] Playwright → tous pass (Chrome + Firefox)
+- [ ] `cargo clippy --all-targets -- -D warnings` clean
+- [ ] `cargo audit` clean
+- [ ] `pnpm audit` clean

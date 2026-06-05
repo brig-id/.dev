@@ -1,79 +1,94 @@
-# Phase 4 — `brig-id/core` : WebAuthn
+# Phase 4 — Release v0.1.0
 
-**Repo :** `brig-id/core`
-**Prérequis :** Phase 3 terminée
-**Crate :** `brigid-webauthn`
-**Statut :** ✅ Complète — commit `03e6b5e` sur `core/dev`
+**Repos :** `crypto`, `core`, `server-leaf`, `web`, `spec`
+**Prérequis :** Phase 3 terminée (E2E validé, Docker fonctionnel)
+**Objectif :** Tag v0.1.0 propre, pre-audit ready, déployable en production.
+
+> **Note v2 :** Version bumped 0.0.1 → 0.1.0 pour refléter l'UI complète
+> et l'intégration E2E validée (scope plus large que le v1 initial).
 
 ---
 
-## Crate `brigid-webauthn`
+## Rotation MASTER_KEY (`server-leaf`)
 
-### Dépendances
-- [x] `webauthn-rs = "0.5"` (features: danger-allow-state-serialisation)
-- [x] `brigid-store` (workspace dep) — stockage credentials chiffré via EncryptedStore
-- [x] `brigid-crypto` (workspace dep) — clé maître
-- [x] `brigid-identity` (workspace dep)
-- [x] `serde` + `serde_json`
-- [x] `url` — origin validation
-- [x] `uuid`
-- [x] `thiserror`
+- [ ] Sous-commande CLI : `leaf rotate-key --old <path> --new <path>`
+  - [ ] Charger l'ancienne et la nouvelle clé depuis des fichiers hex séparés
+  - [ ] Pour chaque credential chiffrée en DB : déchiffrer avec OLD, rechiffrer avec NEW (transactionnel)
+  - [ ] En cas d'erreur partielle : rollback, DB inchangée
+  - [ ] Après rotation : vérifier que l'ancienne clé ne peut plus déchiffrer
+- [ ] Test : rotation round-trip → données accessibles avec la nouvelle clé
+- [ ] Test : déchiffrement avec l'ancienne clé après rotation → erreur
 
-## Flux Registration (passkey)
+---
 
-- [x] `begin_registration(user_id, username) -> (CreationChallengeResponse, PasskeyRegistration)`
-  - [x] RP ID = domaine du serveur (configuré dans WebauthnService::new)
-  - [x] Challenge aléatoire généré par webauthn-rs
-  - [x] Algorithmes acceptés : ES256, RS256 (pas de password)
-- [x] `finish_registration(state, response) -> Passkey`
-  - [x] Valider réponse du client (webauthn-rs)
-  - [x] Retourner Passkey prête à stocker
+## Fuzz targets (`core`)
 
-## Flux Authentication (passkey)
+- [ ] `fuzz_parse_identifier` — entrées aléatoires dans `RootId::parse` (must not panic)
+- [ ] `fuzz_did_web_resolve` — parsing de DIDs aléatoires (must not panic)
+- [ ] `fuzz_jwt_validate` — JWTs aléatoires dans `validate_token` (must not panic)
+- [ ] Ajouter les 3 targets au CI `core` (nightly, 120s en CI)
+- [ ] Seeds FIPS 203/204 comme corpus initiaux pour `crypto`
 
-- [x] `begin_authentication(credentials) -> (RequestChallengeResponse, PasskeyAuthentication)`
-  - [x] Retourne Err(NoCredentials) si slice vide
-  - [x] Challenge aléatoire 32 bytes
-- [x] `finish_authentication(credentials, state, response) -> AuthResult`
-  - [x] Valider réponse (webauthn-rs)
-  - [x] Mettre à jour compteur de signature in-place (credential_updated flag)
-  - [x] Retourner `AuthResult { credential_id, credential_updated }`
+---
 
-## Sécurité spécifique WebAuthn
+## Couverture & Badges
 
-- [x] RP ID strict : aucun wildcard (configuré via WebauthnBuilder)
-- [x] Origin validée par webauthn-rs contre le RP origin
-- [x] Compteur de signature vérifié (update_credential → credential_updated)
-- [x] Credentials stockées chiffrées via brigid-store EncryptedStore — jamais en clair
-- [x] From<WebauthnError> for Error — pas de closures non couvertes
+- [ ] Codecov configuré pour `crypto`, `core`, `server-leaf`
+  - [ ] Token dans GitHub Secrets de chaque repo
+  - [ ] Upload automatique en CI
+- [ ] Badge coverage dans chaque `README.md`
+- [ ] Seuils : `crypto` ≥ 98%, `core` ≥ 95%, `server-leaf` ≥ 80%
 
-## Store helpers
+---
 
-- [x] `store_passkey(store, user_id, passkey) -> Result<Credential>` — sérialise + chiffre
-- [x] `load_passkeys(store, user_id) -> Result<Vec<Passkey>>` — déchiffre + désérialise
+## Finalisation sécurité
 
-## Tests
+- [ ] Revue finale `unwrap()` / `expect()` dans `core` et `server-leaf` — tous justifiés ou remplacés
+- [ ] Vérifier : aucune donnée sensible dans les logs tracing (grep `password|secret|key|token`)
+- [ ] Activer GitHub secret scanning sur tous les repos
+- [ ] Activer GitHub push protection
+- [ ] `SECURITY.md` : SLA de réponse (48h ack, 90j remediation) dans chaque repo
 
-- [x] Test registration + authentication round-trip (webauthn-authenticator-rs SoftPasskey)
-- [x] Test authentication avec slice vide → Err(NoCredentials)
-- [x] Test mauvais RP ID → Err (new_rejects_invalid_rp_id)
-- [x] Test finish_registration avec mauvais état → Err (From<WebauthnError> couvert)
-- [x] Test finish_authentication avec mauvais état → Err
-- [x] Integration test store_passkey + load_passkeys avec EncryptedStore in-memory
-- [x] 100% coverage lignes (TOTAL workspace : 841 lignes, 0 manquées)
+---
 
-### Dépendances ajoutées à deny.toml
-- [x] MPL-2.0 ajouté (webauthn-rs, webauthn-rs-core, webauthn-rs-proto, webauthn-attestation-ca, base64urlsafedata)
-- [x] RUSTSEC-2023-0071 ignoré (rsa via sqlx-macros-core, pas de fix disponible, SQLite only)
+## `spec/` — Finalisation
+
+- [ ] `spec/operations.md` : procédure rotation MASTER_KEY
+- [ ] `spec/operations.md` : procédure déploiement (Docker + variables d'environnement)
+- [ ] `spec/audit-checklist.md` : checklist rotation key, fuzz targets, couverture, supply chain UI
+- [ ] Créer issue publique "Audit tiers v0.1.0 — appel à candidature" dans `brig-id/spec`
+
+---
+
+## Branch protection finale
+
+- [ ] "Require status checks" activé sur `main` dans tous les repos
+  - [ ] Rust : `ci`, `security`, `coverage`
+  - [ ] UI : `typecheck`, `test`, `build`, `audit`
+
+---
+
+## Release v0.1.0
+
+- [ ] `CHANGELOG.md` dans `crypto`, `core`, `server-leaf`, `web`
+- [ ] Tag `v0.1.0` sur `crypto`, `core`, `server-leaf`, `web`
+- [ ] Docker image `brigid/leaf:0.1.0` buildée (multi-stage : UI + Rust)
+- [ ] Image poussée sur ghcr.io
+- [ ] SBOM archivé comme artefact GitHub Release (CycloneDX JSON)
 
 ---
 
 ## Vérification finale
 
-- [x] `cargo test -p brigid-webauthn` — 6/6 tests passent
-- [x] `cargo llvm-cov --workspace --summary-only` → 841 lines, 0 missed (100%)
-- [x] `cargo clippy --all-targets --all-features -- -D warnings` clean
-- [x] `cargo fmt --all --check` clean
-- [x] `cargo deny check` — advisories ok, bans ok, licenses ok, sources ok
-- [x] `cargo audit --ignore RUSTSEC-2023-0071` — exit 0
-- [x] Aucun credential en clair dans les logs ou erreurs
+- [ ] `cargo test --workspace` → 100% pass (crypto + core + server-leaf)
+- [ ] `cargo llvm-cov` → crypto ≥ 98%, core ≥ 95%, server-leaf ≥ 80%
+- [ ] `cargo audit` → zéro advisory (les 3 repos Rust)
+- [ ] `cargo deny check` → zéro violation
+- [ ] `cargo clippy -- -D warnings` → zéro warning
+- [ ] `pnpm audit` → zéro advisory (web)
+- [ ] `pnpm build && pnpm test` → pass
+- [ ] Fuzzing CI : aucun crash connu
+- [ ] SBOM générés et archivés
+- [ ] Docker image `brigid/leaf:0.1.0` fonctionnelle (flux E2E)
+- [ ] Tags v0.1.0 présents sur les 4 repos
+- [ ] `spec/` consultable publiquement
