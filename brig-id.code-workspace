@@ -42,6 +42,25 @@
       {
         "text": "Generate commit messages in English using Conventional Commits. Keep them concise, imperative, and lowercase after the colon."
       }
+    ],
+    "cSpell.words": [
+      "brigid",
+      "clippy",
+      "distroless",
+      "gitmoji",
+      "hkdf",
+      "nonroot",
+      "oidc",
+      "passkey",
+      "passkeys",
+      "qwik",
+      "reqwest",
+      "rustls",
+      "softpasskey",
+      "tokio",
+      "tracing",
+      "vsid",
+      "webauthn"
     ]
   }
 }

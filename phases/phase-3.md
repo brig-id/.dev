@@ -1,117 +1,123 @@
-# Phase 3 — Intégration & Validation E2E (`server-leaf`)
+# Phase 3 — Integration & E2E Validation (`server-leaf`)
 
-**Repos :** `brig-id/core`, `brig-id/server-leaf`, `brig-id/web`
-**Prérequis :** Phase 2 terminée (UI Qwik fonctionnelle)
-**Objectif :** Déploiement unifié — Rust API + UI statique Qwik — validé de bout en bout.
-
----
-
-## Contexte
-
-Le binary `leaf` sert à la fois l'API `brigid-api` et les fichiers statiques Qwik.
-L'UI Qwik build vers `dist/` — copié dans l'image Docker ou monté en volume.
-Aucun Node.js en production.
+**Repos:** `brig-id/core`, `brig-id/server-leaf`, `brig-id/web`
+**Prerequisites:** Phase 2 complete (functional Qwik UI)
+**Goal:** Unified deployment — Rust API + Qwik static UI — validated end to end.
 
 ---
 
-## Intégration server-leaf
+## Context
 
-- [ ] Ajouter `tower-http::services::ServeDir` pour servir `ui/dist/` sur `/`
-- [ ] Route fallback : toute URL non-API → `index.html` (SPA fallback)
-- [ ] CSP header mis à jour : `script-src 'self'` (les assets Qwik sont sur la même origine)
-- [ ] Config `leaf.toml` : champ `ui_dist_dir` (chemin vers le dossier de build UI)
-- [ ] Test : `GET /login` → HTML 200 avec `Content-Type: text/html`
-- [ ] Test : `GET /assets/q-*.js` → 200, `Content-Type: application/javascript`
+The `leaf` binary serves both the `brigid-api` and Qwik static files.
+The Qwik UI builds to `dist/` — either embedded in the Docker image or mounted as a volume.
+No Node.js in production.
 
 ---
 
-## Route manquante : `GET /auth/passkeys`
+## server-leaf integration
 
-> Identifié pendant la phase 2 — l'UI `/passkeys` a besoin de lister les passkeys.
+- [x] Add `tower-http::services::ServeDir` to serve `ui/dist/` on `/`
+- [x] Fallback route: any non-API URL → `index.html` (SPA fallback)
+- [ ] CSP header updated: `script-src 'self'` (Qwik assets are same-origin)
+- [x] `leaf.toml` config: `ui_dist_dir` field (path to the UI build output)
+- [x] Test: `GET /login` → HTML 200 with `Content-Type: text/html`
+- [x] Test: `GET /assets/q-*.js` → 200, `Content-Type: application/javascript`
 
-- [ ] Handler `list_passkeys` :
-  - [ ] Extrait `AuthenticatedClaims`
-  - [ ] Reçoit `user_id` (header ou query param — même pattern que DELETE)
-  - [ ] Vérifie VSID → sinon 403
-  - [ ] `store.fetch_credentials(user_id)` → retourne liste `[{id, created_at}]`
-- [ ] Route `GET /auth/passkeys` ajoutée dans le router
-- [ ] Test : liste retourne les passkeys enregistrées
-- [ ] Test : user_id d'un autre user → 403
+> **Implementation note**: `apply_ui_fallback(router, dist)` in `src/lib.rs` —
+> `ServeDir::new(dist).fallback(ServeFile::new(dist/index.html))` wired as a
+> fallback service on the API router. Configured via `LEAF_SERVER__UI_DIST_DIR`.
+> 5 integration tests in `tests/static_files.rs` (13/13 pass total).
+> `[patch.crates-io]` + `vendor/` copied from core for Rust 1.96 compatibility.
 
 ---
 
-## Validation binary `leaf`
+## Missing route: `GET /auth/passkeys`
 
-- [ ] Test : démarrage sans `BRIGID_MASTER_KEY` → exit non-zéro + message lisible
-- [ ] Test : `--config` vers fichier inexistant → exit non-zéro
-- [ ] Test : config valide + MASTER_KEY → serveur écoute sur le port configuré
-- [ ] Test : graceful shutdown (`SIGTERM`) → DB non corrompue, exit 0
-- [ ] Test : port déjà occupé → exit non-zéro + message clair
+> Identified during phase 2 — the `/passkeys` UI page needs to list passkeys.
+
+- [x] `list_passkeys` handler:
+  - [x] Extracts `AuthenticatedClaims`
+  - [x] Receives `user_id` (query param — same pattern as DELETE)
+  - [x] Verifies VSID → 403 if mismatch
+  - [x] `store.fetch_credentials(user_id)` → returns `[{id, created_at}]`
+- [x] Route `GET /auth/passkeys` added to the router
+- [x] Test: list returns registered passkeys (24/24 core tests pass)
+- [x] Test: another user's `user_id` → 403
+
+---
+
+## `leaf` binary validation
+
+- [ ] Test: startup without `BRIGID_MASTER_KEY` → non-zero exit + readable message
+- [ ] Test: `--config` pointing to a missing file → non-zero exit
+- [ ] Test: valid config + MASTER_KEY → server listens on the configured port
+- [ ] Test: graceful shutdown (`SIGTERM`) → DB not corrupted, exit 0
+- [ ] Test: port already in use → non-zero exit + clear message
 
 ---
 
 ## Docker
 
-- [ ] `docker build -t brigid/leaf:dev .` → succès
-- [ ] Image finale < 60 Mo (Rust binary + assets UI statiques)
-- [ ] `docker run --rm -e BRIGID_MASTER_KEY=... brigid/leaf:dev --help` → aide affichée
-- [ ] Vérifier : process tourne en `nonroot:nonroot`
-- [ ] Vérifier : aucun binaire inutile (`sh`, `curl`, etc. absents dans l'image distroless)
-- [ ] Multi-stage build : stage `ui-build` (Node.js) → stage `rust-build` → stage final (distroless)
+- [ ] `docker build -t brigid/leaf:dev .` → success
+- [ ] Final image < 60 MB (Rust binary + static UI assets)
+- [ ] `docker run --rm -e BRIGID_MASTER_KEY=... brigid/leaf:dev --help` → help printed
+- [ ] Verify: process runs as `nonroot:nonroot`
+- [ ] Verify: no unnecessary binaries (`sh`, `curl`, etc. absent in distroless image)
+- [x] Multi-stage build: `ui-builder` (Node.js) → `rust-builder` → `runtime` (distroless)
 
 ---
 
 ## Docker Compose dev
 
-- [ ] `docker compose -f deploy/compose.dev.yaml up` → serveur démarre sans TLS
+- [ ] `docker compose -f deploy/compose.dev.yaml up` → server starts without TLS
 - [ ] `curl http://localhost:8080/health` → `{"status":"ok"}`
-- [ ] `curl http://localhost:8080/login` → HTML (page Qwik)
-- [ ] `curl http://localhost:8080/.well-known/openid-configuration` → JSON valide
-- [ ] `docker compose -f deploy/compose.dev.yaml down` → propre, aucune donnée résiduelle
+- [ ] `curl http://localhost:8080/login` → HTML (Qwik page)
+- [ ] `curl http://localhost:8080/.well-known/openid-configuration` → valid JSON
+- [ ] `docker compose -f deploy/compose.dev.yaml down` → clean, no residual data
 
 ---
 
-## Tests E2E smoke (Rust + `reqwest`)
+## E2E smoke tests (Rust + `reqwest`)
 
-Fichier : `server-leaf/tests/smoke/`
+File: `server-leaf/tests/smoke/`
 
 - [ ] `GET /health` → 200
-- [ ] `GET /.well-known/openid-configuration` → JSON, champ `issuer` présent
-- [ ] `GET /.well-known/did.json` → JSON, champ `id` présent
-- [ ] `GET /.well-known/jwks.json` → JSON, champ `keys` non vide
+- [ ] `GET /.well-known/openid-configuration` → JSON, `issuer` field present
+- [ ] `GET /.well-known/did.json` → JSON, `id` field present
+- [ ] `GET /.well-known/jwks.json` → JSON, `keys` array non-empty
 - [ ] `GET /login` → HTML 200
-- [ ] Flux WebAuthn registration via SoftPasskey :
+- [ ] WebAuthn registration flow via SoftPasskey:
   - [ ] `POST /auth/register/begin` → challenge
   - [ ] `POST /auth/register/finish` → 200
-- [ ] Flux WebAuthn login + token OIDC :
+- [ ] WebAuthn login flow + OIDC token:
   - [ ] `POST /auth/login/begin` → challenge
   - [ ] `POST /auth/login/finish` → `{"id_token": "...", "user_id": "..."}`
-  - [ ] Décoder JWT → `sub` = VSID, `aud` = client_id
-- [ ] `DELETE /auth/passkeys/{id}` → 200 (après login)
-- [ ] Rate limit : 21ème requête sur `/auth/*` → 429
+  - [ ] Decode JWT → `sub` = VSID, `aud` = client_id
+- [ ] `DELETE /auth/passkeys/{id}` → 200 (after login)
+- [ ] Rate limit: 21st request on `/auth/*` → 429
 
 ---
 
-## Tests E2E navigateur (Playwright, repo `brig-id/web`)
+## Browser E2E tests (Playwright, `brig-id/web` repo)
 
-- [ ] Flux register complet dans Chrome avec passkey logicielle
-- [ ] Flux login → redirect `/passkeys`, token dans localStorage
-- [ ] Liste passkeys affichée
-- [ ] Supprimer passkey → liste mise à jour
-- [ ] Déconnexion → redirect `/login`, localStorage vidé
-- [ ] Tests répétés dans Firefox
+- [ ] Full register flow in Chrome with software passkey
+- [ ] Login flow → redirect to `/passkeys`, token in localStorage
+- [ ] Passkey list displayed
+- [ ] Delete passkey → list updated
+- [ ] Sign out → redirect to `/login`, localStorage cleared
+- [ ] Tests repeated in Firefox
 
 ---
 
-## Vérification finale
+## Final checklist
 
 - [ ] `cargo test --workspace` → 100% pass (core + server-leaf)
 - [ ] `pnpm build && pnpm test` → pass (web)
-- [ ] `cargo build --release -p leaf` → succès
-- [ ] `docker build -t brigid/leaf:dev .` → succès, image < 60 Mo
-- [ ] `docker compose -f deploy/compose.dev.yaml up` → serveur démarre et répond
-- [ ] Smoke tests Rust → tous pass
-- [ ] Playwright → tous pass (Chrome + Firefox)
+- [ ] `cargo build --release -p leaf` → success
+- [ ] `docker build -t brigid/leaf:dev .` → success, image < 60 MB
+- [ ] `docker compose -f deploy/compose.dev.yaml up` → server starts and responds
+- [ ] Rust smoke tests → all pass
+- [ ] Playwright → all pass (Chrome + Firefox)
 - [ ] `cargo clippy --all-targets -- -D warnings` clean
 - [ ] `cargo audit` clean
 - [ ] `pnpm audit` clean
