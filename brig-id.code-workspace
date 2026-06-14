@@ -31,6 +31,10 @@
     {
       "name": "📐 spec",
       "path": "../spec"
+    },
+    {
+      "name": "🌐 web",
+      "path": "../web"
     }
   ],
   "settings": {

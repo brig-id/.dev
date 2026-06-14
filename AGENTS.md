@@ -30,6 +30,7 @@ All repositories are mounted as siblings under `/workspaces/`:
 | `/workspaces/server-grove` | `brig-id/server-grove` | Multi-server orchestration (future) |
 | `/workspaces/server-forest` | `brig-id/server-forest` | Global federation layer (future) |
 | `/workspaces/spec` | `brig-id/spec` | Technical specs for audit |
+| `/workspaces/web` | `brig-id/web` | Qwik UI (phase 2) |
 
 ## Devcontainer — available tools
 
@@ -40,7 +41,7 @@ The container is self-contained; no host Rust installation is needed.
 - **mold** linker (faster incremental builds)
 - `cargo-binstall`, `cargo-audit`, `cargo-deny`, `cargo-vet`
 - `cargo-nextest`, `cargo-llvm-cov`, `cargo-fuzz`
-- `cargo-edit`, `cargo-watch`, `cargo-cyclonedx`, `cargo-leptos`
+- `cargo-edit`, `cargo-watch`, `cargo-cyclonedx`
 - `just`, `wasm-pack`
 - `gh` CLI, `docker` CLI
 
