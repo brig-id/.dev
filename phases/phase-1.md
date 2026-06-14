@@ -21,37 +21,37 @@ Routes manquantes pour que l'UI puisse gérer les passkeys :
 
 ## `brigid-store` — `delete_credential`
 
-- [ ] Fonction `delete_credential(pool, user_id, cred_id)` — `DELETE WHERE id = ? AND user_id = ?`
-  - [ ] Retourner `Error::NotFound` si 0 lignes affectées (credential absente ou cross-user)
-- [ ] Méthode wrapper `EncryptedStore::delete_credential`
-- [ ] Test : suppression correcte → fetch retourne liste vide
-- [ ] Test : mauvais `user_id` → `NotFound`, credential toujours présente
+- [x] Fonction `delete_credential(pool, user_id, cred_id)` — `DELETE WHERE id = ? AND user_id = ?`
+  - [x] Retourner `Error::NotFound` si 0 lignes affectées (credential absente ou cross-user)
+- [x] Méthode wrapper `EncryptedStore::delete_credential`
+- [x] Test : suppression correcte → fetch retourne liste vide
+- [x] Test : mauvais `user_id` → `NotFound`, credential toujours présente
 
 ---
 
 ## `brigid-api` — `DELETE /auth/passkeys/{id}`
 
-- [ ] `ApiError::Forbidden` (403) — variant manquant
-- [ ] `user_id: Uuid` dans `LoginResponse` — UUID interne, non exposé dans le JWT
-  - [ ] Permet à l'UI de lier le token au user_id pour les endpoints issuer-facing
-- [ ] Handler `delete_passkey` :
-  - [ ] Extrait `AuthenticatedClaims` (Bearer token)
-  - [ ] Extrait `passkey_id: Uuid` depuis le path
-  - [ ] Reçoit `{ user_id: Uuid }` dans le body
-  - [ ] Vérifie : `compute_vsid(user.did_web, claims.aud, salt) == claims.sub` → sinon 403
-  - [ ] Appelle `store.delete_credential(user_id, passkey_id)` → 200 ou 404
-- [ ] Route `DELETE /auth/passkeys/{id}` ajoutée dans le router (rate-limité)
-- [ ] Test intégration : register → login → delete passkey → 200
-- [ ] Test : tenter de supprimer la passkey d'un autre user → 403
-- [ ] Test : passkey_id inconnu → 404
-- [ ] Test : token invalide → 401
+- [x] `ApiError::Forbidden` (403) — variant manquant
+- [x] `user_id: Uuid` dans `LoginResponse` — UUID interne, non exposé dans le JWT
+  - [x] Permet à l'UI de lier le token au user_id pour les endpoints issuer-facing
+- [x] Handler `delete_passkey` :
+  - [x] Extrait `AuthenticatedClaims` (Bearer token)
+  - [x] Extrait `passkey_id: Uuid` depuis le path
+  - [x] Reçoit `{ user_id: Uuid }` dans le body
+  - [x] Vérifie : `compute_vsid(user.did_web, claims.aud, salt) == claims.sub` → sinon 403
+  - [x] Appelle `store.delete_credential(user_id, passkey_id)` → 200 ou 404
+- [x] Route `DELETE /auth/passkeys/{id}` ajoutée dans le router (rate-limité)
+- [x] Test intégration : register → login → delete passkey → 200
+- [x] Test : tenter de supprimer la passkey d'un autre user → 403
+- [x] Test : passkey_id inconnu → 404
+- [x] Test : token invalide → 401
 
 ---
 
 ## Vérification finale
 
-- [ ] `cargo build --workspace` → clean, zéro warning
-- [ ] `cargo test --workspace` → 100% pass
-- [ ] `cargo clippy --all-targets -- -D warnings` clean
-- [ ] `cargo fmt --all --check` clean
-- [ ] `cargo audit` clean
+- [x] `cargo build --workspace` → clean, zéro warning
+- [x] `cargo test --workspace` → 100% pass (35/35)
+- [x] `cargo clippy --all-targets -- -D warnings` clean
+- [x] `cargo fmt --all --check` clean
+- [x] `cargo audit` clean
