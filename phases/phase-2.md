@@ -32,11 +32,16 @@ Qwik génère les pages en SSG (login, register) et en CSR pour `/passkeys`
 - [x] `packageManager` field dans `package.json` — enforced par Corepack
 - [x] Pas de dépendances runtime côté serveur (Qwik SSG → fichiers statiques)
 
-> **Note audit** : 2 advisories résiduelles dans `esbuild 0.27.x` (transitif via
-> `vite 7.3.2`). L'une est Deno-spécifique (GHSA-gv7w-rqvm-qjhr), l'autre concerne
-> le dev server Windows (GHSA-g7r4-m6w7-qqqr). Aucune n'affecte notre pipeline
-> Linux/Node.js. `vite ^0.27.0` contraint esbuild < 0.28 ; résolution prévue avec
-> qwik ≥ 1.21 + vite 8 (phase 3).
+> **Note audit (rebuild 2026-07-29)** : le repo `brig-id/web` original n'avait
+> jamais été poussé sur GitHub et a été perdu lors de la reconstruction du
+> dev-container — Phase 2 a été refaite intégralement. Avec `qwik@1.20.0`
+> (contrainte peer `vite >=5 <8`) + `vite@7.3.6` + `vitest@4.1.10` : 2 advisories
+> résiduelles, toutes deux profondément transitives et sans lien avec notre
+> pipeline — `sharp` (via `qwik-city > vite-imagetools`, dev-only image
+> processing) et `brace-expansion` (via `vite > stylus > glob > minimatch`,
+> support Stylus non utilisé). Aucune des deux n'affecte le build de
+> production (fichiers statiques, pas de serveur Node.js). Résolution prévue
+> avec `qwik ≥ 1.21` + `vite 8` (phase 3).
 
 ---
 

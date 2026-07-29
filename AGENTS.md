@@ -54,9 +54,9 @@ Implementation phases are in `/workspaces/.dev/phases/`:
 
 | File | Phase | Repo | Status |
 | --- | --- | --- | --- |
-| `phase-1.md` | API finalization | `core` | ⬜ |
-| `phase-2.md` | Qwik UI | `web` (new repo) | ⬜ |
-| `phase-3.md` | Integration & E2E | `server-leaf` | ⬜ |
+| `phase-1.md` | API finalization | `core` | ✅ |
+| `phase-2.md` | Qwik UI | `web` | ✅ (rebuilt 2026-07-29 — original repo was never pushed, lost in devcontainer rebuild) |
+| `phase-3.md` | Integration & E2E | `server-leaf` | 🟨 (static file serving done, E2E/Docker pending) |
 | `phase-4.md` | Release v0.1.0 | all | ⬜ |
 
 ## Common commands
