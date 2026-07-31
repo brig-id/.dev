@@ -33,9 +33,12 @@ for (const repo of repos) {
   }
 
   const command = script === "install" ? ["install"] : ["run", script];
-  console.log(`\n━━━ ${repo} — npm ${command.join(" ")} ━━━`);
+  console.log(`\n━━━ ${repo} — pnpm ${command.join(" ")} ━━━`);
 
-  const result = spawnSync("npm", command, {
+  // Dispatched through corepack (not a bare "pnpm") so each repo's own
+  // "packageManager" pin in its package.json is what actually runs, not
+  // whatever pnpm happens to be first on PATH.
+  const result = spawnSync("corepack", ["pnpm", ...command], {
     cwd,
     stdio: "inherit"
   });
