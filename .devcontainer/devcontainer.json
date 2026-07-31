@@ -56,7 +56,9 @@
     },
     "ghcr.io/helpers4/devcontainer/pnpm-store:1": {},
     "ghcr.io/helpers4/devcontainer/claude-dev:1": {},
-    "ghcr.io/helpers4/devcontainer/package-auto-install:1": {},
+    "ghcr.io/helpers4/devcontainer/package-auto-install:1": {
+      "autoDiscover": true
+    },
     "ghcr.io/helpers4/devcontainer/auto-header:1": {
       "projectName": "brig⋅id",
       "license": "LGPL-3.0-or-later"
