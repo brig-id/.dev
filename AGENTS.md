@@ -98,6 +98,9 @@ Format: `type(scope): <emoji> description`
 
 ### Allowed scopes
 
+Scopes live in `scopes.json` at this repo's root (machine-readable source of truth,
+also read by the `/commit` slash command):
+
 | Scope | Maps to |
 | --- | --- |
 | `phases` | `phases/` — implementation phase checklists |
@@ -108,10 +111,24 @@ Format: `type(scope): <emoji> description`
 | `ci` | `.github/workflows/` (if any) |
 
 **Do not use a scope outside this list.** If a new top-level concern is added,
-update this table and `.vscode/settings.json`.
+update `scopes.json` (and this table) and `.vscode/settings.json` together.
 
 ```text
 docs(phases): 📝 rewrite plan v1 to v2 — Qwik UI
 chore(devcontainer): 🔧 add pnpm to devcontainer features
 ci(ci): 👷 add conventional commit check
 ```
+
+## Inheritance
+
+This repo's *shape* (`CLAUDE.md`, `scopes.json`, `commit-convention.json`,
+`.claude/commands/commit.md`) is ported from
+[helpers4/.dev](https://github.com/helpers4/.dev)'s canonical setup. Deltas from that shape:
+- **Stack: Rust/cargo**, not TypeScript — `core`/`crypto`/`server-*` are cargo crates; only `web`
+  is a pnpm/Qwik project.
+- **License: LGPL-3.0-or-later**, same as helpers4.
+- `test-container.sh` (environment self-check) and the cargo-volume-heavy, nightly/wasm/mold
+  install logic in `setup-container.sh` are brig·id-specific and intentionally not shared with
+  the TypeScript-only orgs.
+- `phases/*.md` (implementation phase tracking) is a brig·id-specific concern, absent from
+  helpers4's template.
