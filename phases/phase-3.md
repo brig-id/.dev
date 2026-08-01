@@ -48,11 +48,19 @@ No Node.js in production.
 
 ## `leaf` binary validation
 
-- [ ] Test: startup without `BRIGID_MASTER_KEY` → non-zero exit + readable message
-- [ ] Test: `--config` pointing to a missing file → non-zero exit
-- [ ] Test: valid config + MASTER_KEY → server listens on the configured port
-- [ ] Test: graceful shutdown (`SIGTERM`) → DB not corrupted, exit 0
-- [ ] Test: port already in use → non-zero exit + clear message
+- [x] Test: startup without `BRIGID_MASTER_KEY` → non-zero exit + readable message
+- [x] Test: `--config` pointing to a missing file → non-zero exit
+- [x] Test: valid config + MASTER_KEY → server listens on the configured port
+- [x] Test: graceful shutdown (`SIGTERM`) → DB not corrupted, exit 0
+- [x] Test: port already in use → non-zero exit + clear message
+
+> **Implementation note**: `server-leaf/tests/binary.rs` (branch `dev/forge`,
+> committed directly per the prototyping-phase branch policy). Spawns the
+> compiled binary as a subprocess for each case. Along the way, fixed a real
+> gap: figment's TOML file provider treats a missing `--config` file as "no
+> data" rather than an error, so a typo'd path silently produced an
+> unrelated "missing field `server`" error — `main.rs` now checks file
+> existence upfront and panics with the actual path.
 
 ---
 
