@@ -72,7 +72,8 @@ cargo binstall --no-confirm --quiet \
   cargo-watch \
   cargo-cyclonedx \
   just \
-  wasm-pack
+  wasm-pack \
+  mprocs
 
 echo "✓ Rust tools installed."
 
@@ -98,6 +99,25 @@ if ! command -v mold >/dev/null 2>&1; then
   rm -f "/tmp/${MOLD_ARCHIVE}"
   echo "✓ mold ready."
 fi
+
+# ── mkcert (local HTTPS for `brigid setup` / `web` dev) ─────────────────────────
+if ! command -v mkcert >/dev/null 2>&1; then
+  echo ""
+  echo "Installing mkcert..."
+  MKCERT_VERSION="1.4.4"
+  curl -L --proto '=https' --tlsv1.2 -sSf \
+    "https://github.com/FiloSottile/mkcert/releases/download/v${MKCERT_VERSION}/mkcert-v${MKCERT_VERSION}-linux-amd64" \
+    -o /tmp/mkcert
+  sudo install -m 755 /tmp/mkcert /usr/local/bin/mkcert
+  rm -f /tmp/mkcert
+  echo "✓ mkcert ready."
+fi
+
+# ── brigid CLI itself ────────────────────────────────────────────────────────────
+echo ""
+echo "Building brigid CLI..."
+(cd "$(dirname "${BASH_SOURCE[0]}")/.." && cargo install --path . --quiet)
+echo "✓ brigid ready — run \`brigid check\`."
 
 echo ""
 echo "✓ brig·id workspace ready."

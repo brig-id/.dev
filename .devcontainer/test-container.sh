@@ -92,6 +92,7 @@ check_cmd cargo-leptos   "cargo-leptos (SSR Leptos)"
 check_cmd wasm-pack      "wasm-pack"
 check_cmd just           "just (task runner)"
 check_cmd cargo-fuzz     "cargo-fuzz (nightly)"
+check_cmd mprocs         "mprocs (used by brigid dev)"
 
 # ── Variables d'environnement critiques ───────────────────────────────────────
 echo ""
@@ -132,6 +133,7 @@ echo "── Outils système ──"
 check_cmd mold   "mold linker"
 check_cmd docker "docker (docker-outside-of-docker)"
 check_cmd node   "node"
+check_cmd mkcert "mkcert (used by brigid setup)"
 
 # ── Repos montés ──────────────────────────────────────────────────────────────
 echo ""

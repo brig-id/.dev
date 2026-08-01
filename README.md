@@ -46,23 +46,30 @@ If you want `gh` to stay authenticated inside the container, export your host to
 export GH_TOKEN="$(gh auth token)"
 ```
 
-## Cross-repo scripts
+## `brigid` — dev orchestrator
 
-From `.dev/`:
+From `.dev/` (already built and on `PATH` by `setup-container.sh`; otherwise
+`cargo install --path .`):
 
 ```bash
-npm run install:all
-npm run build:all
-npm run test:all
-npm run lint:all
-npm run status:all
-npm run branch:all
-npm run fetch:all
-npm run pull:all
+brigid check           # verify local-dev prerequisites (toolchains, mkcert, MASTER_KEY, ...)
+brigid setup           # fix what `check` finds missing
+brigid dev              # interactively launch dev processes side by side (via mprocs)
+
+brigid repos status     # git status -sb in every repo
+brigid repos fetch      # git fetch --all --prune in every repo
+brigid repos pull       # git pull --rebase --autostash in every repo
+brigid repos branch     # git branch --show-current in every repo
+brigid repos install    # cargo fetch / pnpm install, per repo
+brigid repos build      # cargo build / pnpm run build, per repo
+brigid repos test       # cargo test / pnpm run test, per repo
+brigid repos lint       # cargo clippy -D warnings / pnpm run lint, per repo
 ```
 
-- `scripts/run-each.mjs` runs an npm script in every sibling repository that exposes it
-- `scripts/git-each.mjs` runs a git command in every available sibling repository
 - `repos.json` is the single source of truth for the sibling repository list
+- `brigid repos <install|build|test|lint>` detects each repo's project type
+  (`Cargo.toml` → cargo, `package.json` → pnpm via corepack) automatically
+- source: `Cargo.toml` + `src/` at this repo's root — the one exception to
+  "no product runtime code in `.dev`" (see `AGENTS.md`'s Rules section)
 
 When a new repository is added to the organization, update `repos.json`, `brig-id.code-workspace`, and `.devcontainer/devcontainer.json` together.

@@ -4,3 +4,8 @@
 Thumbs.db
 node_modules
 mkcert-rootCA.pem
+
+# brigid CLI — build output + generated dev-only secrets/config
+/target
+.env
+mprocs.yaml

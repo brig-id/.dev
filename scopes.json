@@ -4,5 +4,6 @@
   "workspace",
   "devcontainer",
   "ai",
-  "ci"
+  "ci",
+  "cli"
 ]

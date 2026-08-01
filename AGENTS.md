@@ -12,7 +12,7 @@ This rule applies to every sibling repository. No exceptions.
 
 - VS Code multi-root workspace (`brig-id.code-workspace`)
 - devcontainer setup (`.devcontainer/`)
-- cross-repo helper scripts (`scripts/`)
+- `brigid` — the dev orchestrator CLI (`Cargo.toml`, `src/`)
 - phase planning (`phases/`)
 - shared AI / agent guidance
 
@@ -42,7 +42,8 @@ The container is self-contained; no host Rust installation is needed.
 - `cargo-binstall`, `cargo-audit`, `cargo-deny`, `cargo-vet`
 - `cargo-nextest`, `cargo-llvm-cov`, `cargo-fuzz`
 - `cargo-edit`, `cargo-watch`, `cargo-cyclonedx`
-- `just`, `wasm-pack`
+- `just`, `wasm-pack`, `mprocs` (split-pane process runner, used by `brigid dev`)
+- `mkcert` (local HTTPS, used by `brigid setup`)
 - `gh` CLI, `docker` CLI
 
 Cargo volumes are Docker named volumes (`brigid-cargo-*`) — nothing written to the host.
@@ -72,11 +73,20 @@ cargo llvm-cov --workspace --summary-only
 
 # Run fuzzing (nightly required)
 cargo +nightly fuzz run fuzz_decrypt -- -max_total_time=60
+
+# Run from .dev — the dev orchestrator
+brigid check   # verify local-dev prerequisites
+brigid setup   # fix what `check` finds missing (mkcert, dev cert, MASTER_KEY)
+brigid dev     # interactively launch dev processes side by side
+brigid repos <status|fetch|pull|branch|install|build|test|lint>
 ```
 
 ## Rules
 
 - Treat this repository as orchestration only — no product runtime code here.
+  The one exception is `brigid` itself (`Cargo.toml`, `src/`): it's dev
+  tooling that never ships, not product code — the CLI equivalent of the old
+  `scripts/*.mjs` it replaced.
 - Add future repositories as siblings of `.dev/`, not nested inside it.
 - Update `brig-id.code-workspace` and `.devcontainer/devcontainer.json`
   together when a new sibling repository is added.
@@ -109,6 +119,7 @@ also read by the `/commit` slash command):
 | `devcontainer` | `.devcontainer/` |
 | `ai` | Agent guidance, prompt files |
 | `ci` | `.github/workflows/` (if any) |
+| `cli` | `brigid` — `Cargo.toml`, `src/` |
 
 **Do not use a scope outside this list.** If a new top-level concern is added,
 update `scopes.json` (and this table) and `.vscode/settings.json` together.
