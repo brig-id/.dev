@@ -34,3 +34,38 @@ en s'appuyant sur les credentials discoverable/résidentes déjà créées par
 - [ ] Tests : `core` (nouveau flux discoverable, `userHandle` inconnu →
       erreur propre) ; `web` (fallback vers le formulaire si
       `isConditionalMediationAvailable()` est absent ou renvoie `false`).
+
+---
+
+## Automatiser le setup dev local (mkcert + env vars leaf)
+
+**Repos concernés :** `web`, `server-leaf`, `.dev` (devcontainer)
+
+**Contexte :** pour tester un vrai flux WebAuthn en dev (voir `web/README.md` "HTTPS in
+dev" et `server-leaf/AGENTS.md` "Local dev without Docker"), il faut aujourd'hui, à la
+main, à chaque nouvelle machine/clone :
+
+- générer et faire confiance à un CA local (`mkcert -install`) — et si le test se fait
+  depuis le navigateur de l'hôte via un port forwardé du devcontainer, l'importer
+  aussi côté hôte (Firefox a son propre magasin de certs, indépendant du système —
+  import manuel via `about:preferences#privacy` → Certificats → Autorités → Importer)
+- générer le certificat `brigid.localhost` dans `web/.cert/` (gitignored)
+- exporter `BRIGID_MASTER_KEY` (aléatoire, perdu à chaque nouveau shell) et
+  `LEAF_SERVER__DOMAIN`/`LEAF_SERVER__PUBLIC_URL` pour que `leaf` matche l'origine
+  `https://brigid.localhost:5173` de `web`
+
+Rien de tout ça n'est bloquant pour avancer, mais c'est de la friction répétée à chaque
+rebuild de devcontainer ou nouvelle machine.
+
+- [ ] Script `dev.sh` (ou équivalent) à la racine de `web` et/ou `server-leaf` qui
+      génère le cert mkcert s'il est absent, et lance `leaf` + `pnpm dev` avec les bons
+      env vars en une seule commande.
+- [ ] Persister `BRIGID_MASTER_KEY` dans un fichier `.env` local gitignored plutôt que
+      de le régénérer à chaque session (avec un avertissement clair que ce n'est QUE
+      pour le dev — jamais pour la prod, voir la contrainte `server-leaf/AGENTS.md`
+      "Hard security constraints").
+- [ ] Évaluer si `postCreateCommand`/une feature devcontainer (`.dev/.devcontainer/devcontainer.json`)
+      peut automatiser `mkcert -install` + génération du cert `brigid.localhost` au
+      build du conteneur, pour que ce soit prêt dès le premier `pnpm dev` — attention à
+      la limite déjà documentée : le CA installé dans le conteneur n'est pas trusted
+      côté hôte, donc l'étape d'import navigateur hôte restera manuelle de toute façon.
