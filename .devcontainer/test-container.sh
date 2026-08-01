@@ -110,6 +110,16 @@ else
   fail "GH_TOKEN — absent"
 fi
 
+if [ -n "${WEBAWESOME_NPM_TOKEN:-}" ]; then
+  if grep -q "npm.cloudsmith.io/fortawesome/webawesome-pro" "${HOME}/.npmrc" 2>/dev/null; then
+    ok "WEBAWESOME_NPM_TOKEN — présent et câblé dans ~/.npmrc"
+  else
+    fail "WEBAWESOME_NPM_TOKEN — présent mais absent de ~/.npmrc (relancer setup-container.sh)"
+  fi
+else
+  warn "WEBAWESOME_NPM_TOKEN — absent (pnpm install échouera sur @web.awesome.me)"
+fi
+
 # ── Volumes cargo ─────────────────────────────────────────────────────────────
 echo ""
 echo "── Volumes cargo ──"

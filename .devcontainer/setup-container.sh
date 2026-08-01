@@ -31,6 +31,20 @@ done
 
 echo "✓ Workspace repos ready."
 
+# ── Web Awesome Pro npm registry auth ───────────────────────────────────────────
+# `web/.npmrc` (committed) points `@web.awesome.me` at the private Cloudsmith
+# registry but deliberately omits the auth token — pnpm won't expand env vars
+# from a project-tracked .npmrc, and committing a literal token is out of the
+# question. The token itself reaches the container fine via devcontainer.json's
+# containerEnv, but nothing ever wrote it into ~/.npmrc, so `pnpm install` for
+# `web` 401s on that package until this runs.
+if [ -n "${WEBAWESOME_NPM_TOKEN:-}" ] && ! grep -q "npm.cloudsmith.io/fortawesome/webawesome-pro" ~/.npmrc 2>/dev/null; then
+  echo ""
+  echo "Configuring Web Awesome Pro registry auth..."
+  echo "//npm.cloudsmith.io/fortawesome/webawesome-pro/:_authToken=${WEBAWESOME_NPM_TOKEN}" >> ~/.npmrc
+  echo "✓ Web Awesome Pro auth configured."
+fi
+
 # ── Rust toolchain ─────────────────────────────────────────────────────────────
 echo ""
 echo "Setting up Rust toolchain..."
