@@ -123,22 +123,36 @@ No Node.js in production.
 
 ## E2E smoke tests (Rust + `reqwest`)
 
-File: `server-leaf/tests/smoke/`
+File: `server-leaf/tests/smoke.rs` (flat file, not a `smoke/` directory —
+matches this repo's existing `tests/binary.rs`/`tests/static_files.rs`
+convention; shared spawn/port helpers factored into `tests/common/mod.rs`,
+also now used by `tests/binary.rs`)
 
-- [ ] `GET /health` → 200
-- [ ] `GET /.well-known/openid-configuration` → JSON, `issuer` field present
-- [ ] `GET /.well-known/did.json` → JSON, `id` field present
-- [ ] `GET /.well-known/jwks.json` → JSON, `keys` array non-empty
-- [ ] `GET /login` → HTML 200
-- [ ] WebAuthn registration flow via SoftPasskey:
-  - [ ] `POST /auth/register/begin` → challenge
-  - [ ] `POST /auth/register/finish` → 200
-- [ ] WebAuthn login flow + OIDC token:
-  - [ ] `POST /auth/login/begin` → challenge
-  - [ ] `POST /auth/login/finish` → `{"id_token": "...", "user_id": "..."}`
-  - [ ] Decode JWT → `sub` = VSID, `aud` = client_id
-- [ ] `DELETE /auth/passkeys/{id}` → 200 (after login)
-- [ ] Rate limit: 21st request on `/auth/*` → 429
+- [x] `GET /health` → 200
+- [x] `GET /.well-known/openid-configuration` → JSON, `issuer` field present
+- [x] `GET /.well-known/did.json` → JSON, `id` field present
+- [x] `GET /.well-known/jwks.json` → JSON, `keys` array non-empty
+- [x] `GET /login` → HTML 200
+- [x] WebAuthn registration flow via SoftPasskey:
+  - [x] `POST /auth/register/begin` → challenge
+  - [x] `POST /auth/register/finish` → 200
+- [x] WebAuthn login flow + OIDC token:
+  - [x] `POST /auth/login/begin` → challenge
+  - [x] `POST /auth/login/finish` → `{"id_token": "...", "user_id": "..."}`
+  - [x] Decode JWT → `sub` = VSID, `aud` = client_id
+- [x] `DELETE /auth/passkeys/{id}` → 200 (after login)
+- [x] Rate limit: 21st request on `/auth/*` → 429
+
+> **Implementation note**: 8 tests, each spawning its own `leaf` subprocess
+> (fresh rate-limit bucket per test — needed, since `/auth/*`'s real limiter,
+> 1 token/3s + burst 5, is exercised for real, not mocked). Two non-obvious
+> findings while writing these, both fixed in the tests themselves (not
+> app bugs): (1) the WebAuthn ceremony's origin must match
+> `LEAF_SERVER__DOMAIN` exactly (used `localhost` for both — `127.0.0.1`
+> fails with a `Security` error even though it resolves to the same
+> address); (2) `sub` (the VSID) is a deliberately distinct pseudonymous
+> identifier from `user_id` (raw UUID) — checked for presence/non-equality,
+> not equality, once that became clear from a failing assertion.
 
 ---
 
