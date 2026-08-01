@@ -18,7 +18,7 @@ No Node.js in production.
 
 - [x] Add `tower-http::services::ServeDir` to serve `ui/dist/` on `/`
 - [x] Fallback route: any non-API URL → `index.html` (SPA fallback)
-- [ ] CSP header updated: `script-src 'self'` (Qwik assets are same-origin)
+- [x] CSP header updated: `script-src 'self'` (Qwik assets are same-origin)
 - [x] `leaf.toml` config: `ui_dist_dir` field (path to the UI build output)
 - [x] Test: `GET /login` → HTML 200 with `Content-Type: text/html`
 - [x] Test: `GET /assets/q-*.js` → 200, `Content-Type: application/javascript`
@@ -28,6 +28,18 @@ No Node.js in production.
 > fallback service on the API router. Configured via `LEAF_SERVER__UI_DIST_DIR`.
 > 5 integration tests in `tests/static_files.rs` (13/13 pass total).
 > `[patch.crates-io]` + `vendor/` copied from core for Rust 1.96 compatibility.
+>
+> **CSP finding (dev/forge, `fix(leaf): 🔒️ ...`)**: `brigid-api::build_router()`
+> (core) already sets CSP/X-Frame-Options/HSTS/nosniff, but only around the
+> routes it defines *before* returning. In axum 0.8, `.layer()` doesn't cover
+> routes/fallback added afterwards — and `server-leaf` always attaches the UI
+> fallback *after* `build_router()` returns, so none of those headers ever
+> reached `/login`, `/register`, or any static asset. Fixed by re-applying
+> the same header set as the true outermost layer in `apply_ui_fallback`,
+> after the fallback is attached (`if_not_present` makes it a no-op for API
+> routes). Same latent gap would hit `server-grove`/`server-forest` if they
+> ever call `build_router()` and add their own fallback the same way — worth
+> a look in `core` when those phases start.
 
 ---
 
