@@ -69,3 +69,126 @@ rebuild de devcontainer ou nouvelle machine.
       build du conteneur, pour que ce soit prêt dès le premier `pnpm dev` — attention à
       la limite déjà documentée : le CA installé dans le conteneur n'est pas trusted
       côté hôte, donc l'étape d'import navigateur hôte restera manuelle de toute façon.
+
+---
+
+## CSP : `'unsafe-inline'` temporaire (script-src / style-src)
+
+**Repos concernés :** `server-leaf` (fix appliqué), `core` (même angle mort, pas
+encore corrigé)
+
+**Contexte :** en corrigeant le bug où le header CSP de `server-leaf` ne
+touchait jamais les pages UI (voir commit `fix(leaf): 🔒️ CSP/security headers
+never reached the UI fallback` sur `dev/forge`), on a découvert — en ouvrant
+vraiment l'app dans un navigateur avec ce CSP réellement appliqué — que le
+commentaire existant (« Qwik ne génère pas de scripts inline en mode SSG »,
+présent aussi bien dans `server-leaf` que dans `brigid-api::build_router` du
+repo `core`) est **faux** : le build statique de Qwik (adapter `static`)
+émet plusieurs `<script>`/`<style>` inline (son bootstrap de résumabilité),
+et `web` charge une police externe (`fonts.bunny.net`). Avec `script-src
+'self'`/`style-src 'self'` strictement appliqués (ce qui n'était jamais
+arrivé jusqu'ici, silencieusement), un navigateur bloque tout ça — plus
+aucun web component (`wa-input`, `wa-button`, …) ne s'active, l'app entière
+devient non-interactive.
+
+**État actuel (stopgap) :** `server-leaf/src/lib.rs` ajoute `'unsafe-inline'`
+à `script-src`/`style-src`, plus `https://fonts.bunny.net` en source
+autorisée. Ça débloque l'app mais annule une bonne partie de la protection
+XSS que CSP est censé apporter — à traiter comme dette technique explicite,
+pas comme une solution acceptée.
+
+**Vraie solution (pas encore faite) :** allowlist par hash SHA-256,
+calculée au build :
+
+- [ ] `web` : script de build (à greffer après `build.server`/SSG) qui scanne
+      `dist/**/*.html`, extrait le contenu exact de chaque `<script>`/`<style>`
+      inline, calcule son hash `sha256-...`, et écrit un manifeste
+      (ex. `dist/csp-hashes.json`) dédupliqué.
+- [ ] `server-leaf` : au démarrage, lire ce manifeste (si présent) et
+      construire dynamiquement la valeur du header CSP en y ajoutant les
+      hashes trouvés, au lieu de la chaîne statique actuelle — garde
+      `script-src`/`style-src` réellement stricts (bloque tout script tiers
+      non prévu) tout en autorisant précisément ce que le build de Qwik émet.
+- [ ] Vérifier si les hashes sont stables d'un build à l'autre (même version
+      Qwik, même structure de page) ou s'ils varient à chaque build — impacte
+      si le manifeste doit être régénéré/commité ou seulement généré à la
+      volée juste avant que `leaf` démarre.
+- [ ] `core/brigid-api` a le même commentaire erroné et la même CSP
+      statique — n'affecte pas `server-leaf` en pratique (ses routes
+      renvoient du JSON, pas du HTML exécuté), mais vaut le coup d'être
+      corrigé pour rester cohérent le jour où un autre repo (`server-grove`,
+      `server-forest`) sert aussi de l'UI Qwik derrière `build_router`.
+
+---
+
+## Bug SSG statique : l'hydratation Qwik ne démarre jamais (chunk vide)
+
+**Repos concernés :** `web`
+
+**Contexte :** en construisant la suite Playwright (voir
+`web/e2e/`), la suite a dû être pointée vers `pnpm dev` (SSR) plutôt que vers
+le build statique (`pnpm build` + adapter `static`, ajouté ce même jour) —
+parce que ce dernier ne fonctionne pas du tout dans un vrai navigateur.
+
+**Diagnostic fait :** reproduit en servant `dist/` avec un simple serveur
+statique Python (`server-leaf` et son CSP complètement hors jeu) :
+
+- `window.qwikevents` existe (le petit script inline qui l'initialise
+  s'exécute bien).
+- Mais **aucun** web component (`wa-input`, `wa-button`, `wa-card`, …) ne
+  devient interactif, et aucune requête n'est jamais faite vers les chunks
+  `@web.awesome.me/webawesome-pro` (`wa.input()`, `wa.card()`, etc. dans
+  `web/src/lib/wa.ts` ne sont jamais appelés).
+- Cause trouvée : le premier `<script type="module" async src="/build/q-XXXXXXXX.js">`
+  de chaque page HTML générée — censé être le vrai bootstrap qwikloader —
+  pointe vers un fichier de **0 octet**. Il ne se passe donc littéralement
+  rien à l'exécution.
+- Suspect principal : ce projet utilise `rolldown-vite` (alias npm de
+  `vite` dans `package.json`) plutôt que Vite/Rollup standard — un
+  bundler encore jeune/expérimental. Pas confirmé, mais cohérent avec un
+  bug de découpage de chunks propre à Rolldown plutôt qu'à Qwik lui-même.
+
+- [ ] Confirmer si le chunk vide est déterministe (même fichier vide à
+      chaque `pnpm build`) ou aléatoire.
+- [ ] Tester avec le vrai package `vite` (sans l'alias `rolldown-vite`) pour
+      isoler si le bug vient de Rolldown spécifiquement.
+- [ ] Si confirmé côté Rolldown : ouvrir un ticket amont (rolldown-vite ou
+      Qwik) et/ou revenir temporairement à `vite` standard pour `build.client`
+      (au moins pour le build de prod, `pnpm dev` peut rester sur rolldown-vite
+      si le problème ne s'y manifeste pas).
+- [ ] Une fois corrigé : réaligner `web/playwright.config.ts` pour tester
+      contre `pnpm build` + un seul `leaf` (topologie de prod réelle) plutôt
+      que contre `pnpm dev` + proxy — voir le commentaire "KNOWN ISSUE" en
+      tête de ce fichier.
+- [ ] Ce bug remet aussi en question la validation faite plus tôt de
+      "Docker Compose dev" (phase-3) : les checks `curl` passaient parce
+      qu'ils ne vérifient que le HTML brut, jamais l'interactivité réelle
+      dans un navigateur.
+
+---
+
+## `/passkeys` : "Add a passkey" enregistre une identité, pas un 2e credential
+
+**Repos concernés :** `web`
+
+**Contexte :** trouvé en écrivant `web/e2e/auth.spec.ts` (test "deleting a
+passkey updates the list") — remplir le champ "Add a passkey" avec le
+username du compte **déjà connecté** échoue avec `user X already exists`.
+En regardant `passkeys/index.tsx::handleAdd`, c'est normal : il appelle la
+même fonction `register()` que la page `/register/`, qui crée une toute
+nouvelle identité — ça n'ajoute pas un second credential/passkey à
+l'identité actuellement connectée. Le libellé "Add a passkey" laisse
+pourtant penser le contraire (pattern UX classique : "ajouter une clé de
+secours à mon compte").
+
+Pas sûr si c'est un bug ou une fonctionnalité différente mal nommée (ex. :
+permettre d'enregistrer une identité pour quelqu'un d'autre depuis une
+session admin ?). Le test a été adapté pour utiliser un second username
+distinct, qui correspond au comportement réel actuel.
+
+- [ ] Clarifier l'intention produit : "Add a passkey" doit-il (a) ajouter un
+      credential supplémentaire à l'identité connectée (nécessiterait un
+      nouvel endpoint côté `core`/`brigid-api`, pas besoin de re-saisir un
+      username), ou (b) rester tel quel (enregistrer une autre identité
+      depuis cette page) mais avec un libellé qui le dise clairement ?
+- [ ] Ajuster le code (`web`) et/ou les tests en fonction de la réponse.
