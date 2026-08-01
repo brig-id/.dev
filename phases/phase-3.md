@@ -58,24 +58,48 @@ No Node.js in production.
 
 ## Docker
 
-- [ ] `docker build -t brigid/leaf:dev .` → success
-- [ ] Final image < 60 MB (Rust binary + static UI assets)
-- [ ] `docker run --rm -e BRIGID_MASTER_KEY=... brigid/leaf:dev --help` → help printed
-- [ ] Verify: process runs as `nonroot:nonroot`
-- [ ] Verify: no unnecessary binaries (`sh`, `curl`, etc. absent in distroless image)
+- [x] `docker build -t brigid/leaf:dev .` → success
+- [x] Final image < 60 MB (Rust binary + static UI assets) — 15.8 MB
+- [x] `docker run --rm -e BRIGID_MASTER_KEY=... brigid/leaf:dev --help` → help printed
+- [x] Verify: process runs as `nonroot:nonroot`
+- [x] Verify: no unnecessary binaries (`sh`, `curl`, etc. absent in distroless image)
 - [x] Multi-stage build: `ui-builder` (Node.js) → `rust-builder` → `runtime` (distroless)
+
+> **Implementation note**: found and fixed two bugs blocking this section
+> (`server-leaf` branch `feat/docker-compose-dev`): (1) `rust-builder` was
+> pinned to `1.85-slim`, but `Cargo.lock` now needs rustc ≥1.88
+> (`time`/`aws-lc-sys`) — re-pinned to `1.88-slim`, the last tag still on
+> Debian 12 (bookworm), keeping the libssl3/libcrypto3 ABI match with the
+> distroless runtime; (2) the distroless runtime never created `/data`, so a
+> fresh named volume inherited `root:root` and the `nonroot` user (UID
+> 65532) couldn't create the SQLite file — pre-created it nonroot-owned in
+> the builder stage and `COPY --chown`'d it in.
+>
+> Separately, `web`'s `pnpm build` produced zero HTML — no Qwik City
+> adapter had ever been installed (`web` branch `feat/qwik-static-adapter`
+> adds the `static` adapter — see "Browser E2E" note below for details).
 
 ---
 
 ## Docker Compose dev
 
 - [ ] `docker compose -f deploy/compose.dev.yaml up` → server starts without TLS
-- [ ] `curl http://localhost:8080/health` → `{"status":"ok"}`
-- [ ] `curl http://localhost:8080/login` → HTML (Qwik page)
-- [ ] `curl http://localhost:8080/.well-known/openid-configuration` → valid JSON
+- [x] `curl http://localhost:8080/health` → `{"status":"ok"}`
+- [x] `curl http://localhost:8080/login` → HTML (Qwik page)
+- [x] `curl http://localhost:8080/.well-known/openid-configuration` → valid JSON
 - [ ] `docker compose -f deploy/compose.dev.yaml down` → clean, no residual data
 
----
+> **Implementation note**: the three `curl` checks are verified — against a
+> native `cargo run -p leaf` pointed at a real `pnpm build` output for the
+> HTML check, and against the fixed Docker image directly for the others —
+> but not through the literal `docker compose ... up` command itself. In
+> the `.dev` devcontainer specifically (`docker-outside-of-docker`), the
+> Docker daemon is the *real host's*, so `compose.dev.yaml`'s bind mount
+> (`/workspaces/web/dist:/ui/dist:ro`) resolves against a path that only
+> exists inside the devcontainer's own mount namespace — it silently
+> mounts empty. The compose file itself is unchanged and should work as
+> written on a real host (or any non-nested Docker setup); confirming that,
+> or reworking the mount to survive nested Docker, is unstarted.
 
 ## E2E smoke tests (Rust + `reqwest`)
 
