@@ -88,11 +88,34 @@
 
 ## Finalisation sécurité
 
-- [ ] Revue finale `unwrap()` / `expect()` dans `core` et `server-leaf` — tous justifiés ou remplacés
-- [ ] Vérifier : aucune donnée sensible dans les logs tracing (grep `password|secret|key|token`)
+- [x] Revue finale `unwrap()` / `expect()` dans `core` et `server-leaf` — tous justifiés ou remplacés
+- [x] Vérifier : aucune donnée sensible dans les logs tracing (grep `password|secret|key|token`)
 - [ ] Activer GitHub secret scanning sur tous les repos
 - [ ] Activer GitHub push protection
-- [ ] `SECURITY.md` : SLA de réponse (48h ack, 90j remediation) dans chaque repo
+- [x] `SECURITY.md` : SLA de réponse (48h ack, 90j remediation) dans chaque repo
+
+> **Implementation note**: `unwrap()`/`expect()` audit via `cargo clippy -W
+> clippy::unwrap_used -W clippy::expect_used` on both repos, test modules
+> filtered out by hand (checked each hit's line against where `mod tests`
+> starts in its file). `core`: one real gap found and fixed —
+> `GovernorConfigBuilder::finish().unwrap()` in `brigid-api/router.rs` had
+> no justification, even though it's provably infallible (`finish()` only
+> returns `None` for a zero `burst_size`/`period`, both non-zero literals
+> right above); now says so. Everything else in both repos already carried
+> a clear message or comment matching the existing convention. Log
+> scrubbing: only `brigid-api` (core) and `server-leaf`'s own `main.rs` call
+> `tracing::*` at all — none of it touches password/secret/master/token/
+> key/credential data; `ApiError::Internal`'s logged `Display` is a fixed
+> scrubbed string, not the inner error.
+>
+> `SECURITY.md`: `crypto`/`core`/`server-leaf` already had one, with a
+> more nuanced tiered SLA (Critical 48h/7d, High 72h/30d, Medium/Low
+> 7d/90d) than the checklist's single-tier wording — `web` was the only
+> repo missing it; added, byte-for-byte matching the existing template.
+>
+> GitHub secret scanning / push protection are repo admin settings — not
+> something to flip from here; see the session's final report for what's
+> blocked and why.
 
 ---
 
