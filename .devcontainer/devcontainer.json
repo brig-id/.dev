@@ -12,7 +12,8 @@
     "source=${localWorkspaceFolder}/../server-grove,target=/workspaces/server-grove,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/../server-forest,target=/workspaces/server-forest,type=bind,consistency=cached",
     "source=${localWorkspaceFolder}/../spec,target=/workspaces/spec,type=bind,consistency=cached",
-    "source=${localWorkspaceFolder}/../web,target=/workspaces/web,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../app,target=/workspaces/app,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../site,target=/workspaces/site,type=bind,consistency=cached",
     // ── cargo cache (named volumes — nothing on the host) ──────────────────────
     "source=brigid-cargo-registry,target=/home/node/.cargo/registry,type=volume",
     "source=brigid-cargo-git,target=/home/node/.cargo/git,type=volume",
@@ -21,7 +22,7 @@
   ],
   "containerEnv": {
     "BRIG_ID_ORG": "brig-id",
-    "BRIG_ID_REPOS": ".github crypto core server-leaf server-grove server-forest spec web",
+    "BRIG_ID_REPOS": ".github crypto core server-leaf server-grove server-forest spec app site",
     // Redirect all Rust target/ dirs to the dedicated volume (never on the host)
     "CARGO_TARGET_DIR": "/cargo-target",
     "GH_TOKEN": "${localEnv:GH_TOKEN_FOR_BRIG_ID}",

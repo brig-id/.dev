@@ -32,12 +32,12 @@ done
 echo "✓ Workspace repos ready."
 
 # ── Web Awesome Pro npm registry auth ───────────────────────────────────────────
-# `web/.npmrc` (committed) points `@web.awesome.me` at the private Cloudsmith
+# `app/.npmrc` (committed) points `@web.awesome.me` at the private Cloudsmith
 # registry but deliberately omits the auth token — pnpm won't expand env vars
 # from a project-tracked .npmrc, and committing a literal token is out of the
 # question. The token itself reaches the container fine via devcontainer.json's
 # containerEnv, but nothing ever wrote it into ~/.npmrc, so `pnpm install` for
-# `web` 401s on that package until this runs.
+# `app` 401s on that package until this runs.
 if [ -n "${WEBAWESOME_NPM_TOKEN:-}" ] && ! grep -q "npm.cloudsmith.io/fortawesome/webawesome-pro" ~/.npmrc 2>/dev/null; then
   echo ""
   echo "Configuring Web Awesome Pro registry auth..."
@@ -114,7 +114,7 @@ if ! command -v mold >/dev/null 2>&1; then
   echo "✓ mold ready."
 fi
 
-# ── mkcert (local HTTPS for `brigid setup` / `web` dev) ─────────────────────────
+# ── mkcert (local HTTPS for `brigid setup` / `app` dev) ─────────────────────────
 if ! command -v mkcert >/dev/null 2>&1; then
   echo ""
   echo "Installing mkcert..."

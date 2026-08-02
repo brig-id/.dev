@@ -18,7 +18,8 @@ All repos are bind-mounted at `/workspaces/<name>` and open together in
 | `/workspaces/server-grove` | `server-grove` | Multi-server orchestration (future) |
 | `/workspaces/server-forest` | `server-forest` | Global federation layer (future) |
 | `/workspaces/spec` | `spec` | Technical specs for audit |
-| `/workspaces/web` | `web` | Qwik UI |
+| `/workspaces/app` | `app` | Qwik UI — login, register, account management |
+| `/workspaces/site` | `site` | Public marketing/landing site |
 
 ## Common commands (run from any product repo)
 
@@ -45,7 +46,7 @@ Docker named volumes (`brigid-cargo-*`), never on the host — don't assume a `t
 inside a repo checkout.
 
 **Toolchain**: stable Rust is the devcontainer base; nightly is installed separately (rust-src +
-llvm-tools-preview) only for `cargo-fuzz`. `wasm32-unknown-unknown` is added for the `web` crate.
+llvm-tools-preview) only for `cargo-fuzz`. `wasm32-unknown-unknown` is added for the `app` crate.
 See `.devcontainer/setup-container.sh` for the full list of installed cargo tools.
 
 **Environment self-check**: run `.devcontainer/test-container.sh` after a container rebuild to

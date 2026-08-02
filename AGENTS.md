@@ -29,7 +29,8 @@ All repositories are mounted as siblings under `/workspaces/`:
 | `/workspaces/server-grove` | `brig-id/server-grove` | Multi-server orchestration (future) |
 | `/workspaces/server-forest` | `brig-id/server-forest` | Global federation layer (future) |
 | `/workspaces/spec` | `brig-id/spec` | Technical specs for audit |
-| `/workspaces/web` | `brig-id/web` | Qwik UI |
+| `/workspaces/app` | `brig-id/app` | Qwik UI — login, register, account management |
+| `/workspaces/site` | `brig-id/site` | Public marketing/landing site |
 
 ## Devcontainer — available tools
 
@@ -157,8 +158,8 @@ Every merge is **rebase + fast-forward only** — no merge commits, no squash me
 This repo's *shape* (`CLAUDE.md`, `scopes.json`, `commit-convention.json`,
 `.claude/commands/commit.md`) is ported from
 [helpers4/.dev](https://github.com/helpers4/.dev)'s canonical setup. Deltas from that shape:
-- **Stack: Rust/cargo**, not TypeScript — `core`/`crypto`/`server-*` are cargo crates; only `web`
-  is a pnpm/Qwik project.
+- **Stack: Rust/cargo**, not TypeScript — `core`/`crypto`/`server-*` are cargo crates; `app`
+  is a pnpm/Qwik project; `site`'s stack isn't decided yet.
 - **License: LGPL-3.0-or-later**, same as helpers4.
 - `test-container.sh` (environment self-check) and the cargo-volume-heavy, nightly/wasm/mold
   install logic in `setup-container.sh` are brig·id-specific and intentionally not shared with
