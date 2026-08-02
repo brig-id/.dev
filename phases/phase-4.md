@@ -159,11 +159,21 @@
 
 ## Release v0.1.0
 
-- [ ] `CHANGELOG.md` dans `crypto`, `core`, `server-leaf`, `web`
+- [x] `CHANGELOG.md` dans `crypto`, `core`, `server-leaf`, `web`
 - [ ] Tag `v0.1.0` sur `crypto`, `core`, `server-leaf`, `web`
 - [ ] Docker image `brigid/leaf:0.1.0` buildée (multi-stage : UI + Rust)
 - [ ] Image poussée sur ghcr.io
 - [ ] SBOM archivé comme artefact GitHub Release (CycloneDX JSON)
+
+> **Implementation note**: all 4 `CHANGELOG.md` drafted in Keep a Changelog
+> format, `[Unreleased]` targeting `v0.1.0`, built from each repo's full
+> commit history (verified module/crate names and public surface against
+> source rather than commit messages alone). Committed on each repo's
+> `dev/forge`. Tagging, the Docker image build/push, and SBOM archival are
+> all blocked on the same thing: nothing in this session gets pushed to any
+> remote (standing instruction — the user reviews and pushes everything
+> themselves), and a tag/image/release only make sense once the branches
+> are actually on GitHub.
 
 ---
 
