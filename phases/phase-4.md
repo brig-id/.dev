@@ -121,10 +121,31 @@
 
 ## `spec/` — Finalisation
 
-- [ ] `spec/operations.md` : procédure rotation MASTER_KEY
-- [ ] `spec/operations.md` : procédure déploiement (Docker + variables d'environnement)
-- [ ] `spec/audit-checklist.md` : checklist rotation key, fuzz targets, couverture, supply chain UI
+- [x] `spec/operations.md` : procédure rotation MASTER_KEY
+- [x] `spec/operations.md` : procédure déploiement (Docker + variables d'environnement)
+- [x] `spec/audit-checklist.md` : checklist rotation key, fuzz targets, couverture, supply chain UI
 - [ ] Créer issue publique "Audit tiers v0.1.0 — appel à candidature" dans `brig-id/spec`
+
+> **Implementation note**: both files already existed from an earlier phase
+> but had drifted from reality while phase 4 was implemented in parallel —
+> `operations.md`'s rotation section still described a not-yet-built CLI
+> (wrong flag names: `--old-key-file`/`--db` instead of the real
+> `--old`/`--new`), and `audit-checklist.md` still scoped a `brigid-ui`
+> Leptos crate and a `brigid-api/src/middleware/csp.rs` file that no longer
+> exist (UI is now the standalone Qwik `brig-id/web` repo; CSP lives in
+> `router.rs`). Fixed both, added the rotate-key round-trip checks and the 3
+> `core` fuzz targets to the automated-checks list, added a `brig-id/web`
+> supply-chain block (`pnpm audit`/`build`/`test.e2e`), and — while in
+> there — fixed the same stale nonce-based-CSP claim in
+> `security-model.md` §4.6 (a leftover from the Leptos era; the current
+> Qwik static build has no per-request render step to inject a nonce into).
+> Both the checklist and security-model now flag the `'unsafe-inline'` CSP
+> stopgap as a tracked open finding instead of silently failing an
+> auditor's check. Committed to `spec`'s `dev/forge` as `0d55ac3`.
+>
+> The public GitHub issue is a visible, user-facing action on a real repo
+> (an open call for outside auditors) — not something to post unilaterally;
+> left for the user to create when ready.
 
 ---
 
