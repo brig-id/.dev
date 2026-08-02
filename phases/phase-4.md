@@ -11,13 +11,42 @@
 
 ## Rotation MASTER_KEY (`server-leaf`)
 
-- [ ] Sous-commande CLI : `leaf rotate-key --old <path> --new <path>`
-  - [ ] Charger l'ancienne et la nouvelle clé depuis des fichiers hex séparés
-  - [ ] Pour chaque credential chiffrée en DB : déchiffrer avec OLD, rechiffrer avec NEW (transactionnel)
-  - [ ] En cas d'erreur partielle : rollback, DB inchangée
-  - [ ] Après rotation : vérifier que l'ancienne clé ne peut plus déchiffrer
-- [ ] Test : rotation round-trip → données accessibles avec la nouvelle clé
-- [ ] Test : déchiffrement avec l'ancienne clé après rotation → erreur
+- [x] Sous-commande CLI : `leaf rotate-key --old <path> --new <path>`
+  - [x] Charger l'ancienne et la nouvelle clé depuis des fichiers hex séparés
+  - [x] Pour chaque credential chiffrée en DB : déchiffrer avec OLD, rechiffrer avec NEW (transactionnel)
+  - [x] En cas d'erreur partielle : rollback, DB inchangée
+  - [x] Après rotation : vérifier que l'ancienne clé ne peut plus déchiffrer
+- [x] Test : rotation round-trip → données accessibles avec la nouvelle clé
+- [x] Test : déchiffrement avec l'ancienne clé après rotation → erreur
+
+> **Implementation note**: `EncryptedStore::rotate_master_key` (core repo,
+> `brigid-store`, `dev/forge`) does the actual re-encryption — `users`
+> (username/server/did_web + `username_index`, itself master-key-derived so
+> it goes stale on rotation too) and `webauthn_credentials`, all in one
+> transaction. 3 tests there: round-trip, old key fails post-rotation, and a
+> malformed-blob-mid-rotation rollback proving the *entire* transaction
+> reverts, not just the row that failed. `server-leaf`'s `leaf rotate-key`
+> CLI (`dev/forge`) wraps it, plus a CLI-level integration test driving the
+> full lifecycle over real HTTP with a software passkey (register → stop →
+> rotate → restart → login).
+>
+> **Two consequences the checklist above doesn't mention, found while
+> implementing this** — both printed by the CLI itself, not just documented
+> in code:
+> - VSIDs (the OIDC `sub` claim) are derived from the master key
+>   (`derive_vsid_salt`) and never stored — recomputed on demand from
+>   `(did_root, client_id, salt)`. Rotating changes every user's VSID for
+>   every relying party simultaneously; there's no way to preserve that
+>   continuity from `rotate-key` alone.
+> - The OIDC signing key is also master-key-derived (not stored), so every
+>   `id_token` issued before a rotation becomes invalid immediately, not
+>   just at natural expiry.
+>
+> **Blocked on `core` being pushed**: `server-leaf`'s `dev/forge` now pins
+> `core` to a commit (`8dfe4db...`) that only exists locally — `cargo build`
+> will fail with "revision not found" until `core`'s `dev/forge` is pushed
+> to GitHub. Confirmed this is the *only* issue (verified the integration
+> locally via a temporary `[patch]` override, removed before committing).
 
 ---
 
