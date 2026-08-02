@@ -10,7 +10,7 @@ All repos are bind-mounted at `/workspaces/<name>` and open together in
 
 | Path | Repo | Role |
 | ---- | ---- | ---- |
-| `/workspaces/.dev` | `.dev` | Orchestration — canonical AGENTS.md, devcontainer, phases |
+| `/workspaces/.dev` | `.dev` | Orchestration — canonical AGENTS.md, devcontainer |
 | `/workspaces/.github` | `.github` | Org-level GitHub config + reusable workflows |
 | `/workspaces/crypto` | `crypto` | Cryptographic primitives |
 | `/workspaces/core` | `core` | Business logic crates |
@@ -51,8 +51,9 @@ See `.devcontainer/setup-container.sh` for the full list of installed cargo tool
 **Environment self-check**: run `.devcontainer/test-container.sh` after a container rebuild to
 verify the Rust toolchain, cargo tools, GH auth, and mounted repos are all in the expected state.
 
-**Phase tracking**: read `phases/*.md` before starting product work — mark completed items with
-`[x]` and never delete items, per AGENTS.md's Rules section.
+**Roadmap tracking**: check [Project 1](https://github.com/orgs/brig-id/projects/1) before
+starting product work — TODOs, backlog ideas, and release/phase status live there as cards,
+not in local files, per AGENTS.md's Rules section.
 
 **Git workflow**: `main` and `dev/*` are protected — never push directly. Branch from `dev/*`
 (`feat/*`/`bug/*`) or from `main` for an urgent prod fix (`hotfix/*`). Every merge is rebase +

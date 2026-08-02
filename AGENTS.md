@@ -13,7 +13,6 @@ This rule applies to every sibling repository. No exceptions.
 - VS Code multi-root workspace (`brig-id.code-workspace`)
 - devcontainer setup (`.devcontainer/`)
 - `brigid` — the dev orchestrator CLI (`Cargo.toml`, `src/`)
-- phase planning (`phases/`)
 - shared AI / agent guidance
 
 ## Workspace structure
@@ -30,7 +29,7 @@ All repositories are mounted as siblings under `/workspaces/`:
 | `/workspaces/server-grove` | `brig-id/server-grove` | Multi-server orchestration (future) |
 | `/workspaces/server-forest` | `brig-id/server-forest` | Global federation layer (future) |
 | `/workspaces/spec` | `brig-id/spec` | Technical specs for audit |
-| `/workspaces/web` | `brig-id/web` | Qwik UI (phase 2) |
+| `/workspaces/web` | `brig-id/web` | Qwik UI |
 
 ## Devcontainer — available tools
 
@@ -49,16 +48,13 @@ The container is self-contained; no host Rust installation is needed.
 Cargo volumes are Docker named volumes (`brigid-cargo-*`) — nothing written to the host.
 `CARGO_TARGET_DIR=/cargo-target` (named volume, not inside any repo).
 
-## Phase tracking (v2 plan)
+## Roadmap & planning
 
-Implementation phases are in `/workspaces/.dev/phases/`:
-
-| File | Phase | Repo | Status |
-| --- | --- | --- | --- |
-| `phase-1.md` | API finalization | `core` | ✅ |
-| `phase-2.md` | Qwik UI | `web` | ✅ (rebuilt 2026-07-29 — original repo was never pushed, lost in devcontainer rebuild) |
-| `phase-3.md` | Integration & E2E | `server-leaf` | 🟨 (static file serving done, E2E/Docker pending) |
-| `phase-4.md` | Release v0.1.0 | all | ⬜ |
+TODOs, backlog ideas, and phase/release tracking live in the org's GitHub Project,
+not in local files: **[brig-id Project 1](https://github.com/orgs/brig-id/projects/1)**
+(cross-repo — items belong to whichever `brig-id/*` repo they concern). Check it
+before starting product work, same way `phases/*.md` used to be read. Open a card
+there for new work instead of adding a local TODO/roadmap file.
 
 ## Common commands
 
@@ -91,7 +87,10 @@ brigid repos <status|fetch|pull|branch|install|build|test|lint>
 - Update `brig-id.code-workspace` and `.devcontainer/devcontainer.json`
   together when a new sibling repository is added.
 - Do not implement the product plan here unless the task is explicitly about shared tooling.
-- When updating a phase file, mark completed items with `[x]` and never delete items.
+- Track TODOs, backlog ideas, and release/phase status as cards in
+  [Project 1](https://github.com/orgs/brig-id/projects/1), not as local
+  Markdown files (`TODO.md`, `phases/*.md`, etc. — retired in favor of the
+  project board).
 
 ## Commit conventions
 
@@ -113,7 +112,6 @@ also read by the `/commit` slash command):
 
 | Scope | Maps to |
 | --- | --- |
-| `phases` | `phases/` — implementation phase checklists |
 | `memory` | `memory/` — persistent agent memory files |
 | `workspace` | `brig-id.code-workspace`, root-level config |
 | `devcontainer` | `.devcontainer/` |
@@ -125,7 +123,7 @@ also read by the `/commit` slash command):
 update `scopes.json` (and this table) and `.vscode/settings.json` together.
 
 ```text
-docs(phases): 📝 rewrite plan v1 to v2 — Qwik UI
+docs(ai): 📝 point AGENTS.md at the GitHub Project instead of phases/
 chore(devcontainer): 🔧 add pnpm to devcontainer features
 ci(ci): 👷 add conventional commit check
 ```
@@ -165,5 +163,5 @@ This repo's *shape* (`CLAUDE.md`, `scopes.json`, `commit-convention.json`,
 - `test-container.sh` (environment self-check) and the cargo-volume-heavy, nightly/wasm/mold
   install logic in `setup-container.sh` are brig·id-specific and intentionally not shared with
   the TypeScript-only orgs.
-- `phases/*.md` (implementation phase tracking) is a brig·id-specific concern, absent from
-  helpers4's template.
+- Roadmap/phase tracking uses a GitHub Project (org-level, cross-repo) instead of
+  local Markdown files — a brig·id-specific choice, not part of helpers4's template.

@@ -1,7 +1,6 @@
 {
   "conventionalCommits.gitmoji": true,
   "conventionalCommits.scopes": [
-    "phases",
     "memory",
     "workspace",
     "devcontainer",
