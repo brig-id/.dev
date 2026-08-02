@@ -33,6 +33,7 @@
 > **Two consequences the checklist above doesn't mention, found while
 > implementing this** — both printed by the CLI itself, not just documented
 > in code:
+>
 > - VSIDs (the OIDC `sub` claim) are derived from the master key
 >   (`derive_vsid_salt`) and never stored — recomputed on demand from
 >   `(did_root, client_id, salt)`. Rotating changes every user's VSID for
@@ -52,11 +53,26 @@
 
 ## Fuzz targets (`core`)
 
-- [ ] `fuzz_parse_identifier` — entrées aléatoires dans `RootId::parse` (must not panic)
-- [ ] `fuzz_did_web_resolve` — parsing de DIDs aléatoires (must not panic)
-- [ ] `fuzz_jwt_validate` — JWTs aléatoires dans `validate_token` (must not panic)
-- [ ] Ajouter les 3 targets au CI `core` (nightly, 120s en CI)
+- [x] `fuzz_parse_identifier` — entrées aléatoires dans `RootId::parse` (must not panic)
+- [x] `fuzz_did_web_resolve` — parsing de DIDs aléatoires (must not panic)
+- [x] `fuzz_jwt_validate` — JWTs aléatoires dans `validate_token` (must not panic)
+- [x] Ajouter les 3 targets au CI `core` (nightly, 120s en CI)
 - [ ] Seeds FIPS 203/204 comme corpus initiaux pour `crypto`
+
+> **Implementation note**: `core/fuzz/` (`dev/forge`) — `fuzz_did_web_resolve`
+> actually fuzzes `did_web_to_url` (the pure, synchronous parsing step), not
+> `resolve_did_web` itself, which makes a real network request per call and
+> would be neither hermetic nor deterministic to fuzz directly; the checklist
+> wording ("parsing de DIDs aléatoires") already pointed at parsing, not
+> resolution. Smoke-tested each target for 10s locally (millions of
+> iterations, zero crashes) before committing. `.github/workflows/fuzz.yml`
+> added (standalone, not a `brig-id/.github` reusable workflow — none exists
+> for fuzzing yet), 120s/target, mirrors `brig-id/crypto`'s fuzz.yml
+> (corpus caching, crash-artifact upload).
+>
+> FIPS 203/204 seed corpus is a separate `crypto`-repo item (its own fuzz
+> targets already exist, just without seeds) — left undone; sourcing real
+> NIST test vectors deserves its own pass rather than being rushed here.
 
 ---
 
